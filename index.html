@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HAWKEYE · Mock call portal demo</title>
+  <title>HAWKEYE · Pitch call portal demo</title>
   <script>
     (function () {
       var t = null, signedIn = false;
@@ -19,12 +19,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-  <script>window.__MOCK_DEF__ = {"criteria":[{"key":"intro","label":"Introduction","header":"Introduction"},{"key":"context","label":"Context set-up","header":"Context set-up"},{"key":"profiling","label":"Profiling","header":"Profiling"},{"key":"mtnut","label":"Fit check","header":"Fit check"},{"key":"mapping","label":"Profile mapping","header":"Profile mapping"},{"key":"community","label":"Kestrel and community","header":"Kestrel and community"},{"key":"program","label":"Program details","header":"Program details"},{"key":"placement","label":"Career support","header":"Career support","na":true},{"key":"rebuttal","label":"Objection handling","header":"Objection handling"},{"key":"usps","label":"What sets us apart","header":"What sets us apart"},{"key":"urgency","label":"Urgency","header":"Urgency"},{"key":"schedule","label":"Call schedule","header":"Call schedule","presales":true}],"fields":[{"key":"conductedBy","group":"details","label":"Mock call conducted by","type":"text","max":80,"help":"Your name, as trainees know you."},{"key":"candidateEmail","group":"details","label":"Candidate email ID","type":"email","max":120,"help":"Their @kestrel.example address. This is how they find their scorecard, and where it’s emailed."},{"key":"candidateName","group":"details","label":"Candidate name","type":"text","max":120},{"key":"managerEmail","group":"details","label":"Their reporting manager’s email","type":"email","max":120,"optional":true,"help":"Optional. They’re copied on the scorecard email. Filled in from earlier calls when we know it."},{"key":"role","group":"details","label":"Role","type":"radio","options":[{"value":"presales","label":"Pre-sales · Qualifier"},{"value":"sales","label":"Sales · Advisor"}]},{"key":"vertical","group":"details","label":"Vertical","type":"radio","options":[{"value":"SWE","label":"SWE"},{"value":"PM","label":"PM"},{"value":"Data","label":"Data"}]},{"key":"round","group":"details","label":"Mock call round","type":"radio","options":[{"value":"Round 1","label":"Round 1 · Trainer"},{"value":"Round 2","label":"Round 2 · Vertical team"},{"value":"Additional attempt","label":"Additional attempt"}]},{"key":"customer","group":"details","label":"Customer profile for the mock call","type":"text","max":300,"help":"The persona you played, e.g. Senior engineer at a SaaS company, 6 yrs exp."},{"key":"verdict","group":"close","label":"Final verdict","type":"radio","options":[{"value":"Good to Go","label":"Good to go"},{"value":"Need to Improve","label":"Need to improve"}]},{"key":"remarks","group":"close","label":"Final detailed remarks","type":"textarea","max":4000,"help":"The overall picture: what to keep doing and what to fix before the next call."},{"key":"recording","group":"close","label":"Call recording (link)","type":"url","max":500,"help":"Paste a link to the recording."},{"key":"duration","group":"close","label":"Total call duration (minutes)","type":"number","min":1,"max":240}]};</script>
-  <script>// HAWKEYE demo backend: every answer is canned, nothing leaves the browser. Kestrel Academy is a made-up company.
+  <script>window.__MOCK_DEF__ = {"criteria":[{"key":"opening","label":"Opening & rapport","header":"Opening & rapport"},{"key":"agenda","label":"Agenda & goals","header":"Agenda & goals"},{"key":"discovery","label":"Discovery questions","header":"Discovery questions"},{"key":"listening","label":"Active listening","header":"Active listening"},{"key":"insight","label":"Insight & recommendation","header":"Insight & recommendation"},{"key":"proof","label":"Proof & results","header":"Proof & results","na":true},{"key":"concerns","label":"Handling concerns","header":"Handling concerns"},{"key":"nextsteps","label":"Next steps","header":"Next steps"}],"fields":[{"key":"conductedBy","group":"details","label":"Pitch call scored by","type":"text","max":80,"help":"Your name, as new starters know you."},{"key":"candidateEmail","group":"details","label":"New starter’s email","type":"email","max":120,"help":"Their @halcyon.example address. This is how they find their scorecard."},{"key":"candidateName","group":"details","label":"New starter’s name","type":"text","max":120},{"key":"managerEmail","group":"details","label":"Their pod lead’s email","type":"email","max":120,"optional":true,"help":"Optional. They’re copied on the scorecard email."},{"key":"role","group":"details","label":"Role","type":"radio","options":[{"value":"presales","label":"Account executive"},{"value":"sales","label":"Account manager"}]},{"key":"vertical","group":"details","label":"Discipline","type":"radio","options":[{"value":"SEO","label":"SEO"},{"value":"Social","label":"Social"},{"value":"Paid","label":"Paid"}]},{"key":"round","group":"details","label":"Pitch round","type":"radio","options":[{"value":"Round 1","label":"Round 1 · Coach"},{"value":"Round 2","label":"Round 2 · Client lead"},{"value":"Additional attempt","label":"Additional attempt"}]},{"key":"customer","group":"details","label":"Mock client","type":"text","max":300,"help":"The client you played, e.g. Tidepool, a reusable bottle brand planning a summer launch."},{"key":"verdict","group":"close","label":"Verdict","type":"radio","options":[{"value":"Good to pitch","label":"Good to pitch"},{"value":"Needs polish","label":"Needs polish"}]},{"key":"remarks","group":"close","label":"Overall notes","type":"textarea","max":4000,"help":"What to keep doing and what to fix before the next pitch."},{"key":"recording","group":"close","label":"Call recording (link)","type":"url","max":500,"help":"Paste a link to the recording."},{"key":"duration","group":"close","label":"Call length (minutes)","type":"number","min":1,"max":240}]};</script>
+  <script>// HAWKEYE demo backend: every answer is canned, nothing leaves the browser. Halcyon is a made-up marketing agency.
 // Any 6-digit code signs you in. jordan.lee@ is a super-admin (Settings); new…@ has no calls; wip…@ hasn't cleared yet.
 (function () {
   var DEF = window.__MOCK_DEF__;
-  var PASS = { presales: 3.5, sales: 4 };
+  var PASS = { presales: 3.4, sales: 3.8 };
   var submitted = [];
 
   function user(email) {
@@ -32,7 +32,7 @@
     var tier = /^jordan\.|^ana\./.test(email) ? 1 : /^admin/.test(email) ? 2 : 3;
     return { ok: true, email: email, name: name, firstName: name.split(' ')[0], tier: tier, isAdmin: tier < 3, isSuper: tier === 1, coach: true, form: { fields: DEF.fields, criteria: DEF.criteria.map(function (c) { return { key: c.key, label: c.label, na: !!c.na, presales: !!c.presales }; }), pass: PASS } };
   }
-  var current = 'maya.fernandes@kestrel.example';
+  var current = 'maya.fernandes@halcyon.example';
 
   function call(date, round, by, scores, fb, verdict, remarks, extra) {
     var criteria = DEF.criteria.map(function (c, i) {
@@ -40,65 +40,60 @@
     });
     var vals = scores.filter(function (s) { return typeof s === 'number'; });
     var avg = Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length * 100) / 100;
-    return Object.assign({ id: 100 + (++ids), date: date, conductedBy: by, candidateName: 'Maya Fernandes', vertical: 'PM', role: 'presales', round: round,
-      customer: 'Senior engineer at a SaaS company, 6 yrs exp', duration: 24, verdict: verdict, remarks: remarks,
-      recording: 'https://example.com/kestrel/recording', recording2: '', score: avg, criteria: criteria }, extra || {});
+    return Object.assign({ id: 100 + (++ids), date: date, conductedBy: by, candidateName: 'Maya Fernandes', vertical: 'Social', role: 'presales', round: round,
+      customer: 'Tidepool, a reusable bottle brand planning a summer launch', duration: 24, verdict: verdict, remarks: remarks,
+      recording: 'https://example.com/halcyon/recording', recording2: '', score: avg, criteria: criteria }, extra || {});
   }
 
   var ids = 0;
   var SAMPLE = [
-    call('2026-09-21T10:30:00Z', 'Round 1', 'Jordan Lee',
-      [4, 4, 3, 2, 2, 3, 4, null, 3, 3, 2, 3],
-      ['Good introduction, but forgot to greet the customer.', 'Set the agenda but skipped the Kestrel overview.', 'Asked about the journey and tools, but missed stakeholders and prior product exposure.',
-        'Only checked the need (why PM). Timeline and money were not covered.', 'Explained the PM JD but didn’t connect it to the gaps in the profile.', 'Mentioned offline events only. Missed P2P learning and masterclasses.',
-        'Good structure: timeline, modules and projects. Name-drop the instructors next time.', '', 'Answered confidently but didn’t explore the objection before responding.',
-        'Mentioned tools access but not how it helps this profile.', 'No urgency created before moving to the call schedule.', 'Scheduled the call but didn’t ask for the resume or LinkedIn.'],
-      'Need to Improve', 'Good confidence and a clear voice. Work on the fit check, profile mapping and urgency before the next round.\nPractise hearing the whole objection before answering.', { duration: 22 }),
-    call('2026-09-24T09:00:00Z', 'Additional attempt', 'Ana Costa',
-      [5, 4, 4, 3, 3, 4, 4, null, 4, 3, 3, 4],
-      ['Greeted warmly, good intro.', 'Lead source and agenda set. Kestrel intro could be crisper.', 'Covered journey, tools and stakeholders. Missed prior product exposure.',
-        'N = why PM, T = when transitioning. Money was not checked.', 'Role mapping done; curriculum mapping only when prompted.', 'P2P learning, offline events and the job portal. Give a real event example.',
-        'Course timeline, modules, capstone and mentors.', '', 'Explored each objection, factual responses.', 'Covered three USPs, but say the benefit for each one.',
-        'Cohort date mentioned. Make it personal to the prospect’s trigger.', 'Natural transition, checked time. Ask for LinkedIn for the roadmap.'],
-      'Need to Improve', 'Clear progress. Profiling and rebuttals are now solid. Bring money into the fit check and make urgency personal.', { duration: 27 }),
-    call('2026-09-29T11:15:00Z', 'Round 2', 'Marcus Bell',
-      [5, 5, 5, 4, 4, 4, 5, null, 4, 4, 4, 5],
-      ['Warm, natural greeting.', 'Lead source, agenda and a one-line Kestrel intro.', 'Academic and work background, stakeholders, tools and AI exposure, why PM.',
-        'M = CTC, T = when transitioning, N = why PM. Good rapport throughout.', 'Role and curriculum mapping in the first 10 minutes. Strong hook.', 'Small cohorts, peer reviews, meetups, masterclasses.',
-        'Structured and interactive. Tied modules to the profile.', '', 'Confident, explored before answering.', 'Tools, mentorship and the alumni network, each with a benefit.',
-        'Cohort start date and scholarship, tied to the appraisal cycle.', 'Asked for LinkedIn, set the agenda, booked a specific slot.'],
-      'Good to Go', 'Great call. Clear structure and genuine rapport. Keep the pace steady when explaining the program.', { duration: 25, ai: {
-        headline: 'A confident, well-structured call that cleared Round 2',
-        summary: 'You opened warmly, ran a conversational discovery and mapped the PM role to your prospect’s gaps inside ten minutes. That is a full point up on your first call, with the fit check and urgency finally working for you.',
-        strengths: [{ criterion: 'Profile mapping', note: 'Role and curriculum mapping landed in the first 10 minutes, which hooked the prospect early.' }, { criterion: 'Call schedule', note: 'You asked for LinkedIn, set the agenda and booked a specific slot.' }],
-        focus: [{ criterion: 'USPs', fix: 'Keep tying each USP to a benefit: “Alumni review your portfolio, so you hear what hiring managers notice.”' }, { criterion: 'Urgency', fix: 'Your appraisal-cycle hook worked; have a second trigger ready in case the prospect doesn’t have one.' }],
-        nextCall: 'On the floor, open every call with the same crisp lead source and agenda you used here.'
+    call('2026-10-06T10:30:00Z', 'Round 1', 'Jordan Lee',
+      [4, 3, 2, 3, 3, null, 2, 3],
+      ['Warm and confident, good energy from the first line.', 'Shared an agenda but didn’t check what the client wanted from the call.', 'Jumped to the plan before asking what they tried last summer.',
+        'Missed the cue when the client mentioned a tight budget.', 'Good idea, but not tied back to their goal.', '',
+        'Got defensive when asked why not just boost posts.', 'Ended with “we’ll send something over”: no owner, no date.'],
+      'Needs polish', 'You clearly believe in the plan. Next round: ask before you present, and close with a named next step and a date.\nPractise hearing a concern out before you answer it.', { duration: 28 }),
+    call('2026-10-10T09:00:00Z', 'Additional attempt', 'Ana Costa',
+      [5, 4, 4, 3, 4, 3, 3, 4],
+      ['Friendly, natural opening.', 'Agreed the goal for the call up front.', 'Asked about last summer’s results and the audience.', 'Played back the budget, missed the timing worry.',
+        'Recommendation now clearly tied to their goal.', 'One case study, but not from a similar brand.', 'Calmer with the budget question; give one number.', 'Next step agreed, but no date.'],
+      'Needs polish', 'Big step up. Discovery is doing its job now. Bring a closer case study and put a date on every next step.', { duration: 31 }),
+    call('2026-10-15T11:15:00Z', 'Round 2', 'Marcus Bell',
+      [5, 5, 5, 4, 5, 4, 4, 5],
+      ['Warm and relaxed.', 'Clear agenda, and checked it with the client.', 'Great questions: goals, audience, last season, constraints.', 'Picked up the launch-date worry and came back to it.',
+        'A sharp idea built on what the client said, in one sentence.', 'A similar brand’s results, with real numbers.', 'Heard the budget concern out, then offered a smaller first phase.', 'Owner, date and the next meeting booked before hanging up.'],
+      'Good to pitch', 'Great pitch. You listened first and it showed. Keep the pace steady when you walk through the budget split.', { duration: 29, ai: {
+        headline: 'A confident, client-first pitch that passed Round 2',
+        summary: 'You asked before you advised, built the idea on what the client told you, and closed with a booked next step. That is a full point up on your first pitch.',
+        strengths: [{ criterion: 'Discovery questions', note: 'Goals, audience, last season and constraints, all before the plan.' }, { criterion: 'Next steps', note: 'Owner, date and the next meeting booked on the call.' }],
+        focus: [{ criterion: 'Handling concerns', fix: 'Have one number ready for budget questions, so the client hears a range, not a pause.' }, { criterion: 'Active listening', fix: 'Play back their worry in their words before you answer it.' }],
+        nextCall: 'On your first live account, open with the same goal-check you used here.'
       } })
   ];
 
   var CFG = {
     emails: true,
     types: {
-      r1: { on: true, cc: { scorer: true, manager: true, head: true, training: false }, subject: 'Your Round 1 mock call: {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your Round 1 mock call with {scorer}.' },
-      r2: { on: true, cc: { scorer: true, manager: true, head: true, training: true }, subject: 'Your Round 2 mock call: {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your Round 2 mock call with {scorer}.' },
-      extra: { on: true, cc: { scorer: true, manager: true, head: true, training: true }, subject: 'Your mock call ({round}): {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your latest mock call with {scorer}.' }
+      r1: { on: true, cc: { scorer: true, manager: true, head: true, training: false }, subject: 'Your Round 1 pitch: {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your Round 1 pitch with {scorer}.' },
+      r2: { on: true, cc: { scorer: true, manager: true, head: true, training: true }, subject: 'Your Round 2 pitch: {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your Round 2 pitch with {scorer}.' },
+      extra: { on: true, cc: { scorer: true, manager: true, head: true, training: true }, subject: 'Your pitch ({round}): {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your latest pitch with {scorer}.' }
     },
-    training: 'jordan.lee@kestrel.example, ana.costa@kestrel.example',
-    heads: { SWE: 'kiran.rao@kestrel.example', PM: 'elena.petrova@kestrel.example', Data: 'tomas.silva@kestrel.example' },
+    training: 'jordan.lee@halcyon.example, ana.costa@halcyon.example',
+    heads: { SEO: 'kiran.rao@halcyon.example', Social: 'elena.petrova@halcyon.example', Paid: 'tomas.silva@halcyon.example' },
     digest: { on: false, extra: '' }, ai: true, chatPerDay: 40
   };
   var PEOPLE = [
-    { email: 'jordan.lee@kestrel.example', name: 'Jordan Lee', tier: 1, fixed: true },
-    { email: 'ana.costa@kestrel.example', name: 'Ana Costa', tier: 1, fixed: true },
-    { email: 'elena.petrova@kestrel.example', name: 'Elena Petrova', tier: 2 },
-    { email: 'kiran.rao@kestrel.example', name: 'Kiran Rao', tier: 2 }
+    { email: 'jordan.lee@halcyon.example', name: 'Jordan Lee', tier: 1, fixed: true },
+    { email: 'ana.costa@halcyon.example', name: 'Ana Costa', tier: 1, fixed: true },
+    { email: 'elena.petrova@halcyon.example', name: 'Elena Petrova', tier: 2 },
+    { email: 'kiran.rao@halcyon.example', name: 'Kiran Rao', tier: 2 }
   ];
   function admin(email) {
     return { ok: true, cfg: JSON.parse(JSON.stringify(CFG)), canEdit: /^jordan|^ana/.test(email), me: email, aiKey: true, digestSent: '',
       typeNames: { r1: 'Round 1', r2: 'Round 2', extra: 'Additional attempts' }, people: PEOPLE,
-      log: [{ at: '2026-11-16T09:30:00Z', kind: 'Scorecard', to: 'noah.kim@kestrel.example', cc: ['jordan.lee@kestrel.example', 'elena.petrova@kestrel.example'], subject: 'Your Round 1 mock call: 3.64/5 · Need to improve', ok: true }] };
+      log: [{ at: '2026-11-16T09:30:00Z', kind: 'Scorecard', to: 'noah.kim@halcyon.example', cc: ['jordan.lee@halcyon.example', 'elena.petrova@halcyon.example'], subject: 'Your Round 1 pitch: 3.64/5 · Needs polish', ok: true }] };
   }
-  var weeks = [], pulseVals = [4.6, 4.5, 4.1, 3.3, 3.6, 3.6, 4.0, 3.7, 3.9, 3.7, 3.2, 3.8];
+  var weeks = [], pulseVals = [4.5, 4.2, 3.4, 3.7, 3.5, 3.6, 3.3, 3.8];
   for (var w = 9; w >= 0; w--) weeks.push({ w: new Date(Date.UTC(2026, 10, 16) - w * 7 * 864e5).toISOString().slice(0, 10), n: [6, 9, 4, 11, 8, 13, 7, 10, 12, 5][9 - w], avg: 3.6 + (w % 3) / 10 });
 
   window.MOCK_PREVIEW_API = {
@@ -106,33 +101,33 @@
       var avg = {};
       DEF.criteria.forEach(function (c, i) {
         var a = pulseVals[i], cell = function (d) { return Math.round((a + d) * 100) / 100; };
-        var gp = c.key === 'placement';
-        avg[c.key] = { all: { all: cell(0), presales: cell(-0.1), sales: c.presales ? null : cell(0.08) }, SWE: { all: cell(-0.15), presales: cell(-0.2), sales: c.presales ? null : cell(-0.05) },
-          PM: { all: cell(0.05), presales: cell(-0.05), sales: c.presales ? null : cell(0.1) }, Data: { all: gp ? null : cell(-0.05), presales: gp ? null : cell(0.1), sales: gp || c.presales ? null : cell(-0.08) } };
+        var gp = c.key === 'proof';
+        avg[c.key] = { all: { all: cell(0), presales: cell(-0.1), sales: c.presales ? null : cell(0.08) }, SEO: { all: cell(-0.15), presales: cell(-0.2), sales: c.presales ? null : cell(-0.05) },
+          Social: { all: cell(0.05), presales: cell(-0.05), sales: c.presales ? null : cell(0.1) }, Paid: { all: gp ? null : cell(-0.05), presales: gp ? null : cell(0.1), sales: gp || c.presales ? null : cell(-0.08) } };
       });
       return { ok: true, month: 'November', total: 214, from: 'May 2026', to: 'Nov 2026', calls: 31, callsPrev: 44, cleared: 9, clearedPrev: 12,
         avgScore: 3.86, avgScorePrev: 3.71, firstTry: 64, firstTryN: 39, callsToClear: 2.4, weeks: weeks,
-        pulse: DEF.criteria.map(function (c, i) { return { key: c.key, label: c.label, avg: pulseVals[i], n: 60, delta: [0.1, 0, 0.05, 0.31, -0.1, 0.12, 0, 0.02, 0.08, -0.05, 0.2, 0][i] }; }),
-        byVertical: [{ v: 'SWE', calls: 34, avg: 3.71, passRate: 68 }, { v: 'PM', calls: 58, avg: 3.92, passRate: 77 }, { v: 'Data', calls: 21, avg: 3.84, passRate: 71 }],
-        averages: avg, counts: { all: { all: 214, presales: 90, sales: 118 }, SWE: { all: 62, presales: 35, sales: 25 }, PM: { all: 112, presales: 45, sales: 65 }, Data: { all: 40, presales: 10, sales: 28 } },
+        pulse: DEF.criteria.map(function (c, i) { return { key: c.key, label: c.label, avg: pulseVals[i], n: 60, delta: [0.05, 0.1, 0.28, 0, -0.08, 0.12, 0.18, -0.04][i] }; }),
+        byVertical: [{ v: 'SEO', calls: 34, avg: 3.71, passRate: 68 }, { v: 'Social', calls: 58, avg: 3.92, passRate: 77 }, { v: 'Paid', calls: 21, avg: 3.84, passRate: 71 }],
+        averages: avg, counts: { all: { all: 214, presales: 90, sales: 118 }, SEO: { all: 62, presales: 35, sales: 25 }, Social: { all: 112, presales: 45, sales: 65 }, Paid: { all: 40, presales: 10, sales: 28 } },
         pass: PASS };
     },
     apiMockCandidate: function (t, email) {
-      if (/^noah/.test(email)) return { ok: true, email: email, name: 'Noah Kim', vertical: 'SWE', role: 'presales', managerEmail: 'kiran.rao@kestrel.example', count: 1,
-        calls: [{ date: '2026-11-10T10:00:00Z', round: 'Round 1', score: 3.18, verdict: 'Need to Improve', by: 'Jordan Lee' }], suggestedRound: 'Additional attempt' };
+      if (/^noah/.test(email)) return { ok: true, email: email, name: 'Noah Kim', vertical: 'Paid', role: 'presales', managerEmail: 'kiran.rao@halcyon.example', count: 1,
+        calls: [{ date: '2026-11-10T10:00:00Z', round: 'Round 1', score: 3.18, verdict: 'Needs polish', by: 'Jordan Lee' }], suggestedRound: 'Additional attempt' };
       return { ok: true, email: email, name: '', vertical: '', role: '', managerEmail: '', count: 0, calls: [], suggestedRound: 'Round 1' };
     },
     apiMockSummary: function (t, id) {
       return { ok: true, id: id, ai: {
-        headline: id === 101 ? 'A confident first call held back by the fit check and urgency' : 'Clear progress: profiling and rebuttals are now solid',
-        summary: id === 101 ? 'You sounded confident and kept a clear structure, but the fit check stopped at “why PM” and the close had no reason to act now.' : 'Up 0.73 on your first call. Discovery is conversational now; money in the fit check and a personal urgency hook are what’s left.',
-        strengths: [{ criterion: 'Introduction', note: 'Warm and clear, even if you forgot the greeting once.' }],
-        focus: [{ criterion: 'the fit check', fix: 'Add money and timeline: ask about CTC while discussing outcomes, and when they want to switch.' }, { criterion: 'Urgency', fix: 'Tie it to their trigger, not just the cohort date.' }],
-        nextCall: 'Write and rehearse one personal urgency line for a PM switcher.' } };
+        headline: id === 101 ? 'A confident first pitch that presented before it listened' : 'Clear progress: discovery is doing its job now',
+        summary: id === 101 ? 'You sounded sure of the plan, but you shared it before asking what the client tried last summer, and the call ended without a dated next step.' : 'Up 0.75 on your first pitch. Your questions now shape the plan; a closer case study and dated next steps are what’s left.',
+        strengths: [{ criterion: 'Opening & rapport', note: 'Warm and confident from the first line.' }],
+        focus: [{ criterion: 'Discovery questions', fix: 'Ask what they tried before and how it went, before you show anything.' }, { criterion: 'Next steps', fix: 'End with an owner and a date: “I’ll send the plan Thursday; can we review it Monday at 10?”' }],
+        nextCall: 'Write three discovery questions for Tidepool and ask them before you open the deck.' } };
     },
     apiMockCoach: function (t, msgs) {
       var q = msgs[msgs.length - 1].content;
-      return { ok: true, left: 37, reply: 'Start with **the fit check**: it was your lowest score on two of three calls.\n\n- Ask about current CTC while you talk about outcomes, not as an opener.\n- Ask when they want to switch: “Are you looking to move this year, or exploring?”\n\nYou asked: “' + q.slice(0, 60) + '”. Want three practice lines for it?' };
+      return { ok: true, left: 37, reply: 'Start with **Discovery questions**: it was your lowest score on your first pitch.\n\n- Ask what they tried last season, and what happened.\n- Ask who the one customer is they most want to reach.\n\nYou asked: “' + q.slice(0, 60) + '”. Want three practice questions for it?' };
     },
     apiMockAdmin: function (t) { return admin(String(t).split(':')[1] || current); },
     apiMockAdminSet: function (t, op) {
@@ -146,8 +141,8 @@
     },
     apiMockEmailPreview: function (t, kind, cfg) {
       var ty = cfg.types[kind] || cfg.types.r1;
-      return { ok: true, subject: kind === 'digest' ? 'HAWKEYE weekly: 12 mock calls, 3 cleared' : ty.subject.replace('{score}', '3.64').replace('{verdict}', 'Need to improve').replace('{round}', 'Additional attempt'),
-        to: 'the trainee', cc: ['the scorer', 'their.manager@kestrel.example'],
+      return { ok: true, subject: kind === 'digest' ? 'HAWKEYE weekly: 12 pitch calls, 3 good to pitch' : ty.subject.replace('{score}', '3.64').replace('{verdict}', 'Needs polish').replace('{round}', 'Additional attempt'),
+        to: 'the trainee', cc: ['the scorer', 'their.manager@halcyon.example'],
         html: '<div style="font-family:Arial;padding:30px;background:#F4F1FA"><div style="background:#fff;border-radius:16px;padding:26px;max-width:600px"><b style="color:#6D3EF0;letter-spacing:4px">HAWKEYE</b><p>' + (kind === 'digest' ? 'Weekly digest preview' : ty.intro.replace(/\n/g, '<br>')) + '</p><p style="font-size:40px;font-family:Georgia">3.64 / 5</p></div></div>' };
     },
     apiMockEmailTest: function (t) { return { ok: true, sentTo: String(t).split(':')[1] || current }; },
@@ -163,7 +158,7 @@
       var s = [];
       Object.keys(answers.criteria).forEach(function (k) { var r = answers.criteria[k].rating; if (/^[1-5]$/.test(r)) s.push(Number(r)); });
       return { ok: true, score: Math.round(s.reduce(function (a, b) { return a + b; }, 0) / s.length * 100) / 100, verdict: answers.verdict, candidateName: answers.candidateName,
-        email: { sent: true, to: answers.candidateEmail, cc: ['jordan.lee@kestrel.example', answers.managerEmail, 'kiran.rao@kestrel.example'].filter(Boolean) } };
+        email: { sent: true, to: answers.candidateEmail, cc: ['jordan.lee@halcyon.example', answers.managerEmail, 'kiran.rao@halcyon.example'].filter(Boolean) } };
     },
     apiMockMyCalls: function (token) {
       var email = String(token).split(':')[1] || current;
@@ -178,7 +173,7 @@
   <link rel="icon" href="mock-favicon-32.png" type="image/png" sizes="32x32">
   <link rel="apple-touch-icon" href="mock-apple-touch-icon.png">
   <meta name="theme-color" content="#0A0714">
-  <meta name="description" content="HAWKEYE · a mock call scoring portal with an AI coach (portfolio demo with fictional data).">
+  <meta name="description" content="HAWKEYE · a mock pitch call scoring portal with an AI coach (portfolio demo with fictional data).">
   <style>
 /* ============ Tokens (shared with ORIGIN) ============ */
 :root {
@@ -995,7 +990,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
 <header class="topbar">
   <a class="brand" href="#/" target="_self" aria-label="HAWKEYE home">
     <svg class="hk-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><defs><linearGradient id="hk-bg" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC3E4"/><stop offset=".5" stop-color="#B07BFF"/><stop offset="1" stop-color="#7B5CFF"/></linearGradient><radialGradient id="hk-sheen" cx=".74" cy=".16" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="64" height="64" rx="16" fill="url(#hk-bg)"/><rect width="64" height="64" rx="16" fill="url(#hk-sheen)"/><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 37v-4a16 16 0 0 1 32 0v4"/><path d="M16 37h6v11h-3.5A2.5 2.5 0 0 1 16 45.5z" fill="#fff"/><path d="M48 37h-6v11h3.5a2.5 2.5 0 0 0 2.5-2.5z" fill="#fff"/><path d="M45 48c0 3-3.6 4.5-9 4.5"/></g><circle cx="34.5" cy="52.5" r="2.6" fill="#fff"/><path d="M50 7.5l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" fill="#fff"/></svg>
-<span class="wordmark hk-wm">HAWKEYE</span><span class="brand-tag">Mock calls · Kestrel</span>
+<span class="wordmark hk-wm">HAWKEYE</span><span class="brand-tag">Mock calls · Halcyon</span>
   </a>
   <div class="topbar-right">
     <a class="top-link" id="nav-settings" href="#/settings" target="_self" hidden>Settings</a>
@@ -1022,20 +1017,20 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
   <div class="land">
     <div class="land-hero">
       <div class="target-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      <p class="eyebrow land-eyebrow"><span class="live-dot"></span>Kestrel · Mock call portal</p>
+      <p class="eyebrow land-eyebrow"><span class="live-dot"></span>Halcyon · Mock call portal</p>
       <h1 class="hk-word">HAWKEYE<span class="dot">.</span></h1>
-      <p class="land-tag">Hit the mark, <em>before the floor does.</em></p>
+      <p class="land-tag">Hit the mark, <em>before the client does.</em></p>
       <p class="land-sub">Score mock calls, get every round’s feedback with an AI coach on hand, and see exactly what a 5 sounds like.</p>
 
       <div class="card signin" id="signin">
         <div data-step="email">
           <p class="eyebrow" id="signin-eyebrow">Sign in</p>
           <h2 id="signin-title">Take your shot.</h2>
-          <p class="lead" id="signin-lead">Use your Kestrel work email. We’ll send a one-time code to your inbox.</p>
+          <p class="lead" id="signin-lead">Use your Halcyon work email. We’ll send a one-time code to your inbox.</p>
           <form id="email-form" novalidate>
             <label class="field-label" for="email">Work email</label>
             <div class="inline-form">
-              <input class="input" id="email" type="email" autocomplete="email" placeholder="you@kestrel.example" required>
+              <input class="input" id="email" type="email" autocomplete="email" placeholder="you@halcyon.example" required>
               <button class="btn btn-primary" type="submit">Send code <span aria-hidden="true">→</span></button>
             </div>
             <p class="form-msg" role="alert"></p>
@@ -1101,16 +1096,16 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16M7 16V10M12 16V5M17 16v-4"/></svg>
         </span>
         <span class="opt-title">Mock call evaluation metrics</span>
-        <span class="opt-sub">The 12 criteria explained: what each one checks, what a 5 sounds like, and live averages from every scored call.</span>
+        <span class="opt-sub">The 8 criteria explained: what each one checks, what a 5 sounds like, and live averages from every scored call.</span>
         <span class="opt-go">Explore the metrics <span aria-hidden="true">→</span></span>
       </a>
     </div>
 
     <div class="home-facts">
-      <div><b>12</b><span>criteria, each rated 1–5</span></div>
-      <div><b>3.5</b><span>pass mark · Pre-sales (Qualifier)</span></div>
-      <div><b>4.0</b><span>pass mark · Sales (Advisor)</span></div>
-      <div><b>2</b><span>rounds: trainer, then vertical team</span></div>
+      <div><b>8</b><span>criteria, each rated 1–5</span></div>
+      <div><b>3.4</b><span>pass mark · Account executive</span></div>
+      <div><b>3.8</b><span>pass mark · Account manager</span></div>
+      <div><b>2</b><span>rounds: coach, then client lead</span></div>
     </div>
   </div>
 </section>
@@ -1204,8 +1199,8 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
 </main>
 
 <footer class="foot">
-  <span>© Kestrel · HAWKEYE, the mock call portal</span>
-  <span>Questions about a scorecard? Ask your trainer in #new-joiners.</span>
+  <span>© Halcyon · HAWKEYE, the mock call portal</span>
+  <span>Questions about a scorecard? Ask your trainer in #new-at-halcyon.</span>
 </footer>
 
 <!-- ============ Ask HAWKEYE (AI coach) ============ -->
@@ -1233,82 +1228,66 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
-/* HAWKEYE demo: the evaluation guide for Kestrel Academy, a made-up company. All numbers are invented. */
+/* HAWKEYE demo: the pitch call scoring guide for Halcyon, a made-up marketing agency. All numbers are invented. */
 (function () {
-  // avg[vertical][role] around a base score; null where a criterion isn't scored.
+  // avg[discipline][role] around a base score; null where a criterion isn't scored.
   function A(b, opt) {
     opt = opt || {};
     var r = function (x) { return Math.round(x * 100) / 100; };
-    var cell = function (d, pre) { return { all: r(b + d), presales: r(b + d - 0.12), sales: opt.presales ? null : r(b + d + 0.08) }; };
-    var o = { all: cell(0), SWE: cell(-0.12), PM: cell(0.06), Data: cell(-0.04) };
-    if (opt.noData) o.Data = { all: null, presales: null, sales: null };
+    var cell = function (d) { return { all: r(b + d), presales: r(b + d - 0.14), sales: r(b + d + 0.09) }; };
+    var o = { all: cell(0), SEO: cell(-0.08), Social: cell(0.07), Paid: cell(-0.03) };
+    if (opt.thinSocial) o.Social = { all: r(b - 0.2), presales: null, sales: r(b - 0.1) };
     return o;
   }
   window.MOCK_GUIDE = {
-    snapshot: { calls: 160, from: 'Jun 2026', to: 'Nov 2026', counts: { all: { all: 160, presales: 68, sales: 92 }, SWE: { all: 52, presales: 24, sales: 28 }, PM: { all: 71, presales: 30, sales: 41 }, Data: { all: 37, presales: 14, sales: 23 } } },
-    verticals: ['SWE', 'PM', 'Data'],
+    snapshot: { calls: 96, from: 'Jun 2026', to: 'Nov 2026', counts: { all: { all: 96, presales: 41, sales: 55 }, SEO: { all: 29, presales: 13, sales: 16 }, Social: { all: 38, presales: 17, sales: 21 }, Paid: { all: 29, presales: 11, sales: 18 } } },
+    verticals: ['SEO', 'Social', 'Paid'],
     phases: [
-      { key: 'open', label: 'Open', sub: 'Earn the next 20 minutes', items: ['intro', 'context'] },
-      { key: 'discover', label: 'Discover', sub: 'Understand the person', items: ['profiling', 'mtnut'] },
-      { key: 'pitch', label: 'Pitch', sub: 'Connect their gaps to the program', items: ['mapping', 'community', 'program', 'placement', 'usps'] },
-      { key: 'close', label: 'Close', sub: 'Move them to a decision', items: ['rebuttal', 'urgency', 'schedule'] }
+      { key: 'open', label: 'Open', sub: 'Set the tone', items: ['opening', 'agenda'] },
+      { key: 'listen', label: 'Listen', sub: 'Understand the client', items: ['discovery', 'listening'] },
+      { key: 'recommend', label: 'Recommend', sub: 'Show the idea, prove it', items: ['insight', 'proof'] },
+      { key: 'close', label: 'Close', sub: 'Agree what happens next', items: ['concerns', 'nextsteps'] }
     ],
     scale: [
-      { n: 5, label: 'Excellent', text: 'Covered every point naturally and tailored it to this prospect.' },
-      { n: 4, label: 'Good', text: 'Covered most points, with one or two small misses.' },
-      { n: 3, label: 'Average', text: 'Partly covered. Noticeable gaps or felt scripted.' },
-      { n: 2, label: 'Weak', text: 'Touched on it briefly, or only when the prospect asked.' },
+      { n: 5, label: 'Excellent', text: 'Natural, specific and built around this client.' },
+      { n: 4, label: 'Good', text: 'Solid, with one small miss.' },
+      { n: 3, label: 'Average', text: 'Done, but generic or rushed.' },
+      { n: 2, label: 'Weak', text: 'Only touched on, or only when the client asked.' },
       { n: 1, label: 'Missing', text: 'Not done, or done in a way that hurt the call.' }
     ],
     criteria: {
-      intro: { name: 'Introduction', what: 'The first 30 seconds: greet them, say who you are, and check it’s a good time.', avg: A(4.6),
-        good: [{ t: 'Greet the prospect by name' }, { t: 'Say who you are and where you’re calling from, in one line' }, { t: 'Check it’s a good time to talk' }, { t: 'Calm, unhurried energy' }],
-        misses: ['Skipping the greeting', 'Diving in without checking they’re free', 'Rushing the opening'],
-        say: 'Hi Sam, this is Maya from Kestrel Academy. Is now a good time for about 15 minutes?' },
-      context: { name: 'Context set-up', what: 'Why you’re calling and what the call will cover, so they know what’s in it for them.', avg: A(4.4),
-        good: [{ t: 'Where and when they enquired' }, { t: 'A one-line intro to Kestrel' }, { t: 'A clear agenda for the call' }, { t: 'For Data: mention the live projects up front', v: 'Data' }],
-        misses: ['A rambling company intro', 'No agenda'],
-        say: 'You asked about our PM program last week. I’d love to hear about your goals first, then show you how the program maps to them.' },
-      profiling: { name: 'Profiling', what: 'Questions that tell you who this person is: background, day-to-day, tools and goals.', avg: A(4.05),
-        good: [{ t: 'Education and work background' }, { t: 'What their day looks like now' }, { t: 'Why this, why now' }, { t: 'A conversation, not a questionnaire' }, { t: 'Their stack, and how they rate themselves on it', v: 'SWE' }],
-        misses: ['Firing questions without reacting to answers', 'Missing the “why now”'],
-        say: 'Walk me through a normal week in your current role. Which parts do you enjoy most?' },
-      mtnut: { name: 'Fit check', what: 'BANT: Budget, Authority, Need, Timing. Is this the right program for them, right now?', avg: A(3.45),
-        good: [{ t: 'Budget, raised naturally while you talk outcomes' }, { t: 'Who else is part of the decision' }, { t: 'The real need behind the enquiry' }, { t: 'When they want to make the move' }],
-        misses: ['Only checking the need', 'Asking about budget as the first question'],
-        say: 'If this goes well, when would you want to be in the new role? And is anyone else part of this decision?' },
-      mapping: { name: 'Profile mapping', what: 'Connect what they told you to exactly what the program changes for them.', avg: A(3.7),
-        good: [{ t: 'Their gaps, mapped to specific modules' }, { t: 'The target role, mapped to the projects' }, { t: 'Done early, so it hooks them' }],
-        misses: ['A generic pitch that could be for anyone', 'Mapping only when the prospect asks'],
-        say: 'You said stakeholder updates eat your week. Module 3 is exactly that: writing one-page updates people actually read.' },
-      community: { name: 'Kestrel and community', what: 'The peers, events and network that make the program more than content.', avg: A(3.8),
-        good: [{ t: 'Cohorts of 40, on purpose' }, { t: 'Peer reviews on every project' }, { t: 'Meetups and alumni events, with a real example' }],
-        misses: ['Listing features with no benefit', 'Skipping the community entirely'],
-        say: 'Your cohort reviews every project you ship, so you get forty sets of eyes, not one.' },
-      program: { name: 'Program details', what: 'Structure, schedule, curriculum and projects, tailored to this prospect.', avg: A(4.0),
-        good: [{ t: 'Length and weekly time needed' }, { t: 'Modules, in plain words' }, { t: 'The projects they’ll ship' }, { t: 'Who the mentors are' }],
-        misses: ['Reading the brochure aloud', 'Not checking the schedule fits their week'],
-        say: 'It’s six months, about eight hours a week: two live evenings and a weekend lab.' },
-      placement: { name: 'Career support', what: 'How we support the job search, honestly. Data doesn’t offer career services, so it isn’t scored on Data calls.', avg: A(3.75, { noData: true }),
-        good: [{ t: 'Who is eligible for career support' }, { t: 'Portfolio and interview prep' }, { t: 'Hiring partners, with real numbers' }],
-        misses: ['Promising a job', 'Vague “we help you get placed”'],
-        say: 'We don’t promise a job. We do get your portfolio ready, run mock interviews and refer you to partners who are hiring.' },
-      rebuttal: { name: 'Objection handling', what: 'Hear the objection fully, explore it, then answer with facts.', avg: A(3.55),
-        good: [{ t: 'Let them finish' }, { t: 'Ask one question to understand it' }, { t: 'Answer with a fact, not pressure' }, { t: 'Check the answer landed' }],
-        misses: ['Answering before understanding', 'Getting defensive'],
-        say: 'That makes sense. When you say it’s a lot of time, is it the weekday evenings or the weekends that worry you?' },
-      usps: { name: 'What sets us apart', what: 'The two or three things that make Kestrel the right choice for this person, each with a benefit.', avg: A(3.65),
-        good: [{ t: 'Pick what matters to them, not everything' }, { t: 'Feature → Advantage → Benefit, every time' }],
-        misses: ['A long list with no benefit', 'Comparing by attacking competitors'],
-        say: 'Small cohorts mean your mentor knows your project by name, so feedback is about your work, not a template.' },
-      urgency: { name: 'Urgency', what: 'A real, personal reason to act now: their trigger, plus actual dates.', avg: A(3.25),
-        good: [{ t: 'Actual cohort dates and seat limits' }, { t: 'Their own trigger: appraisal, hiring season, a deadline' }, { t: 'Fees and payment plans, clearly', r: 'sales' }, { t: 'Urgency that leads to the booked call', r: 'presales' }],
-        misses: ['No urgency at all', 'Made-up scarcity'],
-        say: 'The next cohort starts on the 3rd. Starting then means you finish before your review in May, with two projects to show.' },
-      schedule: { name: 'Call schedule', what: 'Pre-sales only. Hand them to an advisor with a booked slot, an agenda and a reason to show up.', presales: true, avg: A(3.8, { presales: true }),
-        good: [{ t: 'A natural transition, with a reason for the next call' }, { t: 'Two specific times to choose from' }, { t: 'Ask for their profile so the advisor can prepare' }],
-        misses: ['No slot booked', 'No agenda for the next call'],
-        say: 'I’d like you to speak with Priya, one of our senior advisors. Does tomorrow at 6 or Thursday at 7 work better?' }
+      opening: { name: 'Opening & rapport', what: 'The first two minutes: a warm hello, a little small talk, and a confident start.', avg: A(4.45),
+        good: [{ t: 'Greet them by name, warmly' }, { t: 'A moment of real small talk, not a script' }, { t: 'Confident, unhurried pace' }],
+        misses: ['Rushing straight into slides', 'Nervous over-apologising'],
+        say: 'Hi Lena, thanks for making the time. How did the spring launch land in the end?' },
+      agenda: { name: 'Agenda & goals', what: 'Agree what the call is for and what a good outcome looks like, before anything else.', avg: A(4.15),
+        good: [{ t: 'A three-part agenda in one sentence' }, { t: 'Ask what they want from the call' }, { t: 'Confirm how much time they have' }],
+        misses: ['No agenda at all', 'An agenda the client never agreed to'],
+        say: 'I thought we’d spend ten minutes on your goals, fifteen on our idea, and the rest on questions. Anything you’d add?' },
+      discovery: { name: 'Discovery questions', what: 'Open questions that uncover goals, audience, history and constraints before you recommend anything.', avg: A(3.45),
+        good: [{ t: 'Goals, in their numbers' }, { t: 'Who the audience really is' }, { t: 'What they tried before, and how it went' }, { t: 'Budget, timing and who signs off' }, { t: 'For SEO: which pages and searches matter most', v: 'SEO' }, { t: 'For Paid: current cost per result', v: 'Paid' }],
+        misses: ['Presenting the plan before asking anything', 'Yes/no questions only'],
+        say: 'What did you try last summer, and what would you keep if you did it again?' },
+      listening: { name: 'Active listening', what: 'Show you heard them: play back what they said and build on it.', avg: A(3.7),
+        good: [{ t: 'Summarise their goal in their words' }, { t: 'Pick up on worries they mention in passing' }, { t: 'Let silences breathe' }],
+        misses: ['Talking over the client', 'Ignoring a concern they raised'],
+        say: 'So the real worry is launching before stock arrives. Let’s build the plan around that date.' },
+      insight: { name: 'Insight & recommendation', what: 'One clear idea, built on what the client told you, explained simply.', avg: A(3.55),
+        good: [{ t: 'One headline idea, in one sentence' }, { t: 'Tied back to their goal' }, { t: 'Channels and budget split that make sense for them', r: 'sales' }, { t: 'A clear first step they can say yes to', r: 'presales' }],
+        misses: ['Ten ideas, none of them sharp', 'A plan that could be for any brand'],
+        say: 'Our idea is simple: show Tidepool in the cold, every week, until people can’t picture a summer without it.' },
+      proof: { name: 'Proof & results', what: 'Back the idea with evidence: a similar client, a test, a number. N/A when there is honestly nothing comparable yet.', avg: A(3.6, { thinSocial: true }),
+        good: [{ t: 'A similar brand’s results, with real numbers' }, { t: 'Honest about what we don’t know yet' }],
+        misses: ['Vague “we’ve done this loads”', 'Numbers from an unrelated client'],
+        say: 'For a drinks brand last year, the same approach cut cost per sale by a third in eight weeks.' },
+      concerns: { name: 'Handling concerns', what: 'Hear the concern out, explore it, answer with facts, check it landed.', avg: A(3.3),
+        good: [{ t: 'Let them finish' }, { t: 'Ask one question to understand it' }, { t: 'Answer with a fact or an option' }, { t: 'Check: “Does that help?”' }],
+        misses: ['Getting defensive', 'Answering a different question'],
+        say: 'That’s fair. Is it the total budget that worries you, or committing to three months up front?' },
+      nextsteps: { name: 'Next steps', what: 'End with who does what, by when, and the next meeting booked.', avg: A(3.75),
+        good: [{ t: 'An owner and a date for every action' }, { t: 'The next meeting booked on the call' }, { t: 'A same-day follow-up email' }],
+        misses: ['“We’ll send something over”', 'No date for the next conversation'],
+        say: 'I’ll send the plan by Thursday. Can we review it together on Monday at 10?' }
     }
   };
 })();
@@ -1329,7 +1308,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
   var GUIDE = window.MOCK_GUIDE;
   var API_URL = window.MOCK_API || '';
   var TOKEN_KEY = 'mcp-token';
-  var ROLE_NAME = { presales: 'Pre-sales (Qualifier)', sales: 'Sales (Advisor)' };
+  var ROLE_NAME = { presales: 'Account executive', sales: 'Account manager' };
 
   var state = { token: null, user: null, calls: null, round: 'all', next: null, vertical: 'all', role: 'all', metricsBuilt: false, crit: 'intro' };
 
@@ -1506,11 +1485,11 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
 
   /* ================= Landing + sign in ================= */
   var SIGNIN_COPY = {
-    home: { eyebrow: 'Sign in', title: 'Take your shot.', lead: 'Use your Kestrel work email. We’ll send a one-time code to your inbox.' },
-    score: { eyebrow: 'Sign in to score', title: 'Ready to score a call?', lead: 'Use your Kestrel work email. We’ll send a one-time code, then take you straight to the scorecard.' },
-    mine: { eyebrow: 'Sign in to see your score', title: 'Your feedback is waiting.', lead: 'Use the Kestrel email your trainer scored you under. We’ll send a one-time code to your inbox.' },
-    metrics: { eyebrow: 'Sign in for the metrics', title: 'See what a 5 sounds like.', lead: 'Use your Kestrel work email. We’ll send a one-time code to your inbox.' },
-    settings: { eyebrow: 'Sign in', title: 'HAWKEYE settings', lead: 'Use your Kestrel work email. We’ll send a one-time code to your inbox.' }
+    home: { eyebrow: 'Sign in', title: 'Take your shot.', lead: 'Use your Halcyon work email. We’ll send a one-time code to your inbox.' },
+    score: { eyebrow: 'Sign in to score', title: 'Ready to score a call?', lead: 'Use your Halcyon work email. We’ll send a one-time code, then take you straight to the scorecard.' },
+    mine: { eyebrow: 'Sign in to see your score', title: 'Your feedback is waiting.', lead: 'Use the Halcyon email your trainer scored you under. We’ll send a one-time code to your inbox.' },
+    metrics: { eyebrow: 'Sign in for the metrics', title: 'See what a 5 sounds like.', lead: 'Use your Halcyon work email. We’ll send a one-time code to your inbox.' },
+    settings: { eyebrow: 'Sign in', title: 'HAWKEYE settings', lead: 'Use your Halcyon work email. We’ll send a one-time code to your inbox.' }
   };
   var otpEmail = '';
 
@@ -1547,7 +1526,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     e.preventDefault();
     var email = $('#email').value.trim().toLowerCase();
     var msg = $('.form-msg', this);
-    if (!/^[^\s@]+@kestrel\.example$/.test(email)) { msg.textContent = 'Please use your @kestrel.example work email.'; return; }
+    if (!/^[^\s@]+@halcyon\.example$/.test(email)) { msg.textContent = 'Please use your @halcyon.example work email.'; return; }
     sendCode(email, $('button', this), msg);
   });
 
@@ -1620,13 +1599,13 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
       return '<span class="pb' + (tough && p.key === tough.key ? ' is-tough' : '') + '" data-k="' + p.key + '"><i style="height:' + h + '%"></i></span>';
     }).join('');
     var verts = s.byVertical.map(function (v) {
-      return '<div class="vrow"><b>' + esc(v.v) + '</b><span>' + v.calls + ' calls</span><span>' + (v.avg == null ? '–' : fmt2(v.avg)) + ' avg</span><span>' + (v.passRate == null ? '–' : v.passRate + '%') + ' good to go</span></div>';
+      return '<div class="vrow"><b>' + esc(v.v) + '</b><span>' + v.calls + ' calls</span><span>' + (v.avg == null ? '–' : fmt2(v.avg)) + ' avg</span><span>' + (v.passRate == null ? '–' : v.passRate + '%') + ' good to pitch</span></div>';
     }).join('');
     b.innerHTML =
       '<div class="board-head"><span class="eyebrow">' + esc(s.month) + ' in mock calls</span><span class="board-live"><span class="live-dot"></span>Live</span></div>' +
       '<div class="kpis">' +
         '<div class="kpi"><span class="kpi-l">Calls scored</span><b class="kpi-v" data-count="' + s.calls + '">' + s.calls + '</b>' + trendPill(s.calls, s.callsPrev) + '</div>' +
-        '<div class="kpi"><span class="kpi-l">Cleared for the floor</span><b class="kpi-v" data-count="' + s.cleared + '">' + s.cleared + '</b>' + trendPill(s.cleared, s.clearedPrev) + '</div>' +
+        '<div class="kpi"><span class="kpi-l">Rated good to pitch</span><b class="kpi-v" data-count="' + s.cleared + '">' + s.cleared + '</b>' + trendPill(s.cleared, s.clearedPrev) + '</div>' +
         '<div class="kpi"><span class="kpi-l">First-try pass rate</span><b class="kpi-v">' + (s.firstTry == null ? '–' : s.firstTry + '<small>%</small>') + '</b><span class="kpi-cmp">Round 1 calls, last 90 days</span></div>' +
         '<div class="kpi"><span class="kpi-l">Average score</span><b class="kpi-v">' + (s.avgScore == null ? '–' : fmt2(s.avgScore) + '<small>/5</small>') + '</b>' + trendPill(s.avgScore, s.avgScorePrev, 'score') + '</div>' +
       '</div>' +
@@ -1679,7 +1658,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     } else if (f.type === 'textarea') {
       input = '<textarea class="input" id="' + id + '" name="' + f.key + '" maxlength="' + f.max + '" rows="4"></textarea>';
     } else {
-      var attrs = { text: 'type="text"', email: 'type="email" autocomplete="off" placeholder="name@kestrel.example"', url: 'type="url" placeholder="https://example.com/recording"', number: 'type="number" inputmode="numeric" min="' + f.min + '" max="' + f.max + '" step="1" placeholder="e.g. 25"' }[f.type] || 'type="text"';
+      var attrs = { text: 'type="text"', email: 'type="email" autocomplete="off" placeholder="name@halcyon.example"', url: 'type="url" placeholder="https://example.com/recording"', number: 'type="number" inputmode="numeric" min="' + f.min + '" max="' + f.max + '" step="1" placeholder="e.g. 25"' }[f.type] || 'type="text"';
       input = '<input class="input" id="' + id + '" name="' + f.key + '" ' + attrs + (f.max && f.type !== 'number' ? ' maxlength="' + f.max + '"' : '') + '>';
     }
     var wide = f.type === 'textarea' || f.type === 'radio' && f.options.length > 2 || f.key === 'customer' || f.key === 'recording';
@@ -1698,7 +1677,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     if (c.na) rates += '<label class="rate is-na"><input type="radio" name="r-' + c.key + '" value="na" aria-label="Not applicable"><span><b>N/A</b><small>Not applicable</small></span></label>';
     return '<div class="crit" data-crit="' + c.key + '"' + (c.presales ? ' data-presales hidden' : '') + '>' +
       '<div class="crit-head"><span class="crit-num">' + String(i + 1).padStart(2, '0') + '</span><span class="crit-name">' + esc(c.label) + '</span>' +
-      (c.presales ? '<span class="crit-tag">Pre-sales only</span>' : '') +
+      (c.presales ? '<span class="crit-tag">Account executives only</span>' : '') +
       '<span class="crit-hint">' + esc(what) + ' <a href="#/metrics/' + c.key + '" target="_blank" rel="noopener">Guide ↗</a></span></div>' +
       '<div class="crit-body"><div class="rating" role="radiogroup" aria-label="' + esc(c.label) + ' rating">' + rates + '</div>' +
       '<textarea class="input" name="fb-' + c.key + '" rows="2" maxlength="2000" aria-label="' + esc(c.label) + ' feedback" placeholder="What did they do well, and what should they change?"></textarea>' +
@@ -1736,8 +1715,8 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     return a;
   }
 
-  // Call schedule is scored only on pre-sales calls; Data has no placement support, so it's never scored there.
-  function applicable(c, a) { return (!c.presales || a.role === 'presales') && !(c.key === 'placement' && a.vertical === 'Data'); }
+  // Criteria that don’t apply to a role or discipline are skipped.
+  function applicable(c, a) { return (!c.presales || a.role === 'presales') && !(c.key === 'placement' && a.vertical === 'Paid'); }
 
   function syncScore() {
     var form = state.user.form, a = collect();
@@ -1804,7 +1783,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     form.fields.forEach(function (f) {
       var v = a[f.key], el = $('[data-field="' + f.key + '"]');
       if (!v) return f.optional ? null : mark(el, f.type === 'radio' ? 'Please pick one.' : 'Please fill this in.');
-      if (f.type === 'email' && !/^[^\s@]+@kestrel\.example$/i.test(v)) return mark(el, f.key === 'candidateEmail' ? 'Use the candidate’s @kestrel.example email, so they can see their scorecard.' : 'Use their @kestrel.example email.');
+      if (f.type === 'email' && !/^[^\s@]+@halcyon\.example$/i.test(v)) return mark(el, f.key === 'candidateEmail' ? 'Use the candidate’s @halcyon.example email, so they can see their scorecard.' : 'Use their @halcyon.example email.');
       if (f.type === 'url' && !/^https:\/\/\S+$/i.test(v)) return mark(el, 'Paste the full link, starting with https://');
       if (f.type === 'number' && (!/^\d+$/.test(v) || Number(v) < f.min || Number(v) > f.max)) return mark(el, 'Whole minutes, ' + f.min + '–' + f.max + '.');
     });
@@ -1833,7 +1812,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
   var lastLookup = '';
   function lookupCandidate() {
     var email = (formEl('candidateEmail').value || '').trim().toLowerCase(), hint = $('#cand-hint');
-    if (!/^[^\s@]+@kestrel\.example$/.test(email) || email === lastLookup) return;
+    if (!/^[^\s@]+@halcyon\.example$/.test(email) || email === lastLookup) return;
     lastLookup = email;
     hint.hidden = false;
     hint.innerHTML = '<span class="mono muted">Looking them up…</span>';
@@ -1845,7 +1824,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
       if (c.role && !radioVal('role')) { setRadio('role', c.role); filled.push('role'); }
       if (c.vertical && !radioVal('vertical')) { setRadio('vertical', c.vertical); filled.push('vertical'); }
       if (c.suggestedRound && !radioVal('round')) { setRadio('round', c.suggestedRound); filled.push('round'); }
-      var history = c.calls.length ? ' ' + c.calls.map(function (x) { return esc(x.round || 'Call') + ' ' + fmt2(x.score) + ' (' + (/good/i.test(x.verdict) ? 'good to go' : 'need to improve') + ')'; }).join(' → ') + '.' : '';
+      var history = c.calls.length ? ' ' + c.calls.map(function (x) { return esc(x.round || 'Call') + ' ' + fmt2(x.score) + ' (' + (/good/i.test(x.verdict) ? 'good to pitch' : 'needs polish') + ')'; }).join(' → ') + '.' : '';
       hint.innerHTML = !c.count
         ? 'First mock call for <b>' + esc(email) + '</b>. Round 1 is picked for you.'
         : '<b>' + esc(c.name || email) + '</b> has ' + c.count + ' earlier call' + (c.count === 1 ? '' : 's') + '.' + history +
@@ -1872,13 +1851,13 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
       return;
     }
     if (a.role !== 'presales') delete a.criteria.schedule;
-    if (a.vertical === 'Data') a.criteria.placement = { rating: 'na', feedback: '' };
+    if (a.vertical === 'Paid') a.criteria.placement = { rating: 'na', feedback: '' };
     a.sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
     busy(btn, true);
     api('apiMockSubmit', state.token, a).then(function (res) {
       store(draftKey(), null);
       $('#done-title').textContent = res.candidateName + '’s scorecard is in.';
-      $('#done-lead').innerHTML = 'Final score <b>' + fmt2(res.score) + ' / 5</b> · ' + esc(res.verdict === 'Good to Go' ? 'Good to go' : 'Need to improve') +
+      $('#done-lead').innerHTML = 'Final score <b>' + fmt2(res.score) + ' / 5</b> · ' + esc(res.verdict === 'Good to pitch' ? 'Good to pitch' : 'Needs polish') +
         '. It’s saved to the mock call responses sheet, and ' + esc(res.candidateName.split(' ')[0]) +
         ' can see it now under <b>I want to see my score</b>.';
       var m = res.email || {};
@@ -1902,8 +1881,8 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
   function scored(call) { return call.criteria.filter(function (c) { return typeof c.score === 'number'; }); }
   function isGood(call) { return /good/i.test(call.verdict); }
   function shownCriteria(call) {
-    // Data calls don't score placement: leave it out rather than show an empty row.
-    return call.criteria.filter(function (c) { return !(c.key === 'placement' && call.vertical === 'Data' && typeof c.score !== 'number'); });
+    // Paid calls don't score placement: leave it out rather than show an empty row.
+    return call.criteria.filter(function (c) { return !(c.key === 'placement' && call.vertical === 'Paid' && typeof c.score !== 'number'); });
   }
 
   /** Display labels, e.g. "Round 1", "Additional attempt 2", "Call 3" (calls scored before rounds were recorded). */
@@ -1916,7 +1895,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     });
   }
 
-  /** Cleared every round: the latest call is Good to go, and it was Round 2 (or a re-attempt after it, or an older call without rounds). */
+  /** Cleared every round: the latest call is Good to pitch, and it was Round 2 (or a re-attempt after it, or an older call without rounds). */
   function isCleared(calls) {
     var last = calls[calls.length - 1], g = groupOf(last);
     if (!isGood(last)) return false;
@@ -1942,8 +1921,8 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     } else head += '.';
     parts.push(head);
 
-    if (isGood(call)) parts.push('Your trainer’s verdict was <b>Good to go</b>.');
-    else if (/improve/i.test(call.verdict)) parts.push('Your trainer’s verdict was <b>Need to improve</b>, so another mock call followed.');
+    if (isGood(call)) parts.push('Your trainer’s verdict was <b>Good to pitch</b>.');
+    else if (/improve/i.test(call.verdict)) parts.push('Your trainer’s verdict was <b>Needs polish</b>, so another mock call followed.');
 
     var line = '';
     if (strengths.length) line += 'You were strongest on ' + listText(strengths.map(function (c) { return '<b>' + esc(c.label) + '</b>'; })) + '. ';
@@ -2054,7 +2033,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     else paras.push('You never scored below 4 on any criterion. That’s rare.');
     if (improved.length) paras.push('Your biggest improvements were ' + listText(improved.map(function (h) { return bold(h) + ' (' + h.first + ' → ' + h.last + ')'; })) + '.');
     if (steady.length) paras.push('You were consistently strong on ' + listText(steady.map(bold)) + ': keep doing what works there.');
-    if (focus.length) paras.push((cleared ? 'As you move onto the floor, focus on ' : 'Before your next call, focus on ') + listText(focus.map(bold)) + '.');
+    if (focus.length) paras.push((cleared ? 'As you move onto live accounts, focus on ' : 'Before your next call, focus on ') + listText(focus.map(bold)) + '.');
 
     var heldRows = held.map(function (h) {
       var path = h.pts.map(function (p) { return '<span class="sc ' + (p.score <= 3 ? 'lo' : 'hi') + '" title="' + esc(labels[p.i]) + '">' + p.score + '</span>'; }).join('<span class="arrow">→</span>');
@@ -2150,7 +2129,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
         '<div class="cc-title"><p class="eyebrow">' + esc(labels[i]) + ' · ' + esc(fmtDate(call.date)) + (i === calls.length - 1 ? ' · Latest' : '') + '</p>' +
           '<h3>' + (call.conductedBy ? 'Scored by ' + esc(call.conductedBy) : esc(labels[i])) + '</h3>' +
           (meta ? '<p class="cc-meta">' + meta + '</p>' : '') + '</div>' +
-        (call.verdict ? '<span class="verdict ' + (good ? 'ok' : 'warn') + '">' + (good ? '✓ Good to go' : '↻ Need to improve') + '</span>' : '') +
+        (call.verdict ? '<span class="verdict ' + (good ? 'ok' : 'warn') + '">' + (good ? '✓ Good to pitch' : '↻ Needs polish') + '</span>' : '') +
       '</header>' +
       '<div class="cc-body">' +
         '<div class="cc-summary">' + summaryHtml +
@@ -2214,7 +2193,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     $$('.trend .hit', body).forEach(function (h) {
       var k = Number(h.getAttribute('data-i')), c = calls[k];
       h.addEventListener('mousemove', function (e) {
-        showTip('<b>' + esc(labels[k]) + '</b> · ' + esc(fmtDate(c.date)) + '<br>' + fmt2(c.score) + ' / 5 · ' + (isGood(c) ? 'Good to go' : 'Need to improve'), e.clientX, e.clientY);
+        showTip('<b>' + esc(labels[k]) + '</b> · ' + esc(fmtDate(c.date)) + '<br>' + fmt2(c.score) + ' / 5 · ' + (isGood(c) ? 'Good to pitch' : 'Needs polish'), e.clientX, e.clientY);
       });
       h.addEventListener('mouseleave', hideTip);
       h.addEventListener('click', function () { hideTip(); jumpToCall(k); });
@@ -2281,16 +2260,16 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
   }
 
   /* ================= Metrics ================= */
-  var VLABEL = { all: 'All verticals', 'SWE': 'SWE', 'PM': 'PM', Data: 'Data' };
-  var RLABEL = { all: 'All roles', presales: 'Pre-sales · Qualifier', sales: 'Sales · Advisor' };
-  var RSHORT = { presales: 'Pre-sales', sales: 'Sales' };
+  var VLABEL = { all: 'All disciplines', 'SEO': 'SEO', 'Social': 'Social', Paid: 'Paid' };
+  var RLABEL = { all: 'All roles', presales: 'Account executive', sales: 'Account manager' };
+  var RSHORT = { presales: 'Account executive', sales: 'Account manager' };
   function critOrder() {
     var out = [];
     GUIDE.phases.forEach(function (p) { p.items.forEach(function (k) { out.push(k); }); });
     return out;
   }
-  // Call schedule is only scored on pre-sales calls; Data doesn't offer placement.
-  function critShown(k, v, r) { return !(k === 'schedule' && r === 'sales') && !(k === 'placement' && v === 'Data'); }
+  // Criteria that don’t apply to a role or discipline are skipped.
+  function critShown(k, v, r) { return !(k === 'schedule' && r === 'sales') && !(k === 'placement' && v === 'Paid'); }
   function avgFor(key, v, r) { return GUIDE.criteria[key].avg[v][r || 'all']; }
   function callsFor(v, r) { return GUIDE.snapshot.counts[v][r || 'all']; }
 
@@ -2317,17 +2296,17 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
 
     $('#metrics-body').innerHTML =
       '<header class="page-head"><p class="eyebrow">03 · Evaluation metrics</p><h1>How mock calls are scored</h1>' +
-      '<p class="lede">Twelve criteria, in the order a good call flows. Pick one to see what it checks, what a 5 looks like, and where people lose marks. The guidance comes from trainers’ written feedback; the averages update live from every scored call.</p></header>' +
+      '<p class="lede">Eight criteria, in the order a good pitch call flows. Pick one to see what it checks, what a 5 looks like, and where people lose marks. The averages update live from every scored call.</p></header>' +
       '<div class="facts">' +
         '<div class="fact"><span class="eyebrow">Each criterion</span><b>1 – 5</b><span>Missing, weak, average, good, excellent</span></div>' +
         '<div class="fact"><span class="eyebrow">Final score</span><b>Average</b><span>Of every criterion that applies to the call</span></div>' +
-        '<div class="fact"><span class="eyebrow">Pass mark</span><b>3.5 · 4.0</b><span>Pre-sales (Qualifier) · Sales (Advisor)</span></div>' +
-        '<div class="fact"><span class="eyebrow">Verdict</span><b>Go / Improve</b><span>Need to improve means another mock call</span></div>' +
+        '<div class="fact"><span class="eyebrow">Pass mark</span><b>3.4 · 3.8</b><span>Account executive · Account manager</span></div>' +
+        '<div class="fact"><span class="eyebrow">Verdict</span><b>Pitch / Polish</b><span>Needs polish means another mock call</span></div>' +
       '</div>' +
       '<div class="sec-title"><h2>The call, in four phases</h2><p>Pick a criterion to open it below.</p></div>' +
       '<div class="flow">' + phases + '</div>' +
       '<div class="filter-row" id="explorer-top"><div class="filters">' +
-        '<div class="seg" role="group" aria-label="Vertical">' + seg + '</div>' +
+        '<div class="seg" role="group" aria-label="Discipline">' + seg + '</div>' +
         '<div class="seg seg-sm" role="group" aria-label="Role">' + rseg + '</div>' +
       '</div><span class="note" id="vert-note"></span></div>' +
       '<div class="explorer"><div class="crit-nav" role="tablist" aria-label="Criteria">' + nav + '</div><div class="detail" id="crit-detail" role="tabpanel"></div></div>' +
@@ -2389,12 +2368,12 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     var who = (v === 'all' ? '' : v + ' ') + (r === 'all' ? '' : RSHORT[r].toLowerCase() + ' ');
     $('#vert-note').innerHTML = esc('Averages from ' + n + ' scored ' + who + 'calls, ' + GUIDE.snapshot.from + '–' + GUIDE.snapshot.to) +
       (n < 10 ? '<br><b>Small sample:</b> treat these averages as rough.' : '') +
-      (r === 'sales' ? '<br>Call schedule isn’t scored on sales calls.' : '') +
-      (v === 'Data' ? '<br>Placement isn’t scored for Data: we don’t offer it.' : '');
+      
+      (v === 'Social' ? '<br>Proof &amp; results is often N/A on Social calls for new brands.' : '');
 
     var phase = GUIDE.phases.filter(function (p) { return p.items.indexOf(key) !== -1; })[0];
     var items = g.good.filter(function (it) { return (!it.v || v === 'all' || it.v === v) && (!it.r || r === 'all' || it.r === r); });
-    var vm = /^(SWE|PM|Data): /;
+    var vm = /^(SEO|Social|Paid): /;
     var misses = g.misses.filter(function (m) { var hit = m.match(vm); return !hit || v === 'all' || hit[1] === v; });
     var a = avgFor(key, v, r);
 
@@ -2411,7 +2390,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     };
 
     $('#crit-detail').innerHTML =
-      '<div class="detail-top"><div><p class="eyebrow">' + num(key) + ' · ' + esc(phase.label) + (g.presales ? ' · Pre-sales only' : '') + '</p>' +
+      '<div class="detail-top"><div><p class="eyebrow">' + num(key) + ' · ' + esc(phase.label) + (g.presales ? ' · Account executives only' : '') + '</p>' +
         '<h2>' + esc(g.name) + '</h2><p class="what">' + esc(g.what) + '</p></div>' +
         '<div class="avg-box"><b>' + (a == null ? '–' : a.toFixed(2)) + '</b><span>' + (a == null ? 'Not enough calls yet' : 'average score<br>' + esc(VLABEL[v]) + ' · ' + esc(RLABEL[r])) + '</span></div></div>' +
       '<div class="detail-cols">' +
@@ -2419,7 +2398,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
           return '<li><span>' + esc(it.t) + tag(it) + '</span></li>';
         }).join('') + '</ul></div>' +
         '<div><h4>Where people lose marks</h4><ul class="misses">' + misses.map(function (m) { return '<li><span>' + esc(m) + '</span></li>'; }).join('') + '</ul>' +
-        '<div class="vbars"><h4>Average by vertical' + (r === 'all' ? '' : ' · ' + esc(RSHORT[r])) + '</h4>' + vbars + '</div></div>' +
+        '<div class="vbars"><h4>Average by discipline' + (r === 'all' ? '' : ' · ' + esc(RSHORT[r])) + '</h4>' + vbars + '</div></div>' +
       '</div>' +
       '<div class="say"><h4>Try saying</h4><p>“' + esc(g.say) + '”</p></div>';
 
@@ -2486,7 +2465,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     var chips = calls.length
       ? ['What should I fix first before my next call?', low ? 'Give me three lines to practise for ' + low.label + '.' : null,
         calls.length > 1 ? 'How have I improved across my calls?' : 'What did I do well on this call?', 'Make me a 20-minute practice plan.']
-      : ['How will my mock call be scored?', 'What does a 5 on Fit check sound like?', 'Make me a practice plan for my first mock call.'];
+      : ['How will my mock call be scored?', 'What does a 5 on Discovery questions sound like?', 'Make me a practice plan for my first mock call.'];
     return chips.filter(Boolean);
   }
 
@@ -2546,7 +2525,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
 
   /* ================= Settings (admins) ================= */
   var MAIL_KEYS = ['r1', 'r2', 'extra'];
-  var CC_NAMES = { scorer: 'Scorer', manager: 'Their manager', head: 'Vertical head', training: 'Training team' };
+  var CC_NAMES = { scorer: 'Scorer', manager: 'Their manager', head: 'Discipline lead', training: 'Training team' };
   var PLACEHOLDERS = '{first} {name} {round} {score} {verdict} {scorer} {vertical} {role} {passMark}';
 
   function getPath(o, path) { return path.split('.').reduce(function (x, k) { return x == null ? x : x[k]; }, o); }
@@ -2608,7 +2587,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
             (p.fixed ? '<span class="muted p-act">Fixed</span>' : p.tier === 2 ? '<button class="link-btn p-act" type="button" data-acc="setTier" data-email="' + esc(p.email) + '">Remove admin</button>'
               : '<button class="link-btn p-act" type="button" data-acc="restore" data-email="' + esc(p.email) + '">Restore</button>') + '</div>';
         }).join('') + '</div>' +
-        '<form class="add-admin" id="add-admin"><input class="input" name="email" type="email" placeholder="name@kestrel.example" required><input class="input" name="name" placeholder="Full name (optional)"><button class="btn btn-primary btn-sm" type="submit">Make admin</button></form></div></section>'
+        '<form class="add-admin" id="add-admin"><input class="input" name="email" type="email" placeholder="name@halcyon.example" required><input class="input" name="name" placeholder="Full name (optional)"><button class="btn btn-primary btn-sm" type="submit">Make admin</button></form></div></section>'
       : '';
 
     var log = (d.log || []).map(function (l) {
@@ -2621,11 +2600,11 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
       '<p class="lede">Who gets each scorecard email and what it says, the weekly digest, the AI coach, and who can manage HAWKEYE.' + (ro ? ' <b>You can view these; only the super-admins can change them.</b>' : '') + '</p></header>' +
       '<section class="set-sec"><div class="set-head"><div><h2>Scorecard emails</h2><p class="muted">The trainee gets the same view they see under “I want to see my score”, with HAWKEYE’s take on top.</p></div>' + sw('emails', 'Send scorecard emails') + '</div>' +
         '<div class="mail-grid">' + mailCards + '</div></section>' +
-      '<section class="set-sec"><div class="set-head"><div><h2>Who gets copied</h2><p class="muted">Only @kestrel.example addresses. Separate them with commas. The scorer and the trainee’s manager come from each scorecard.</p></div></div>' +
-        '<div class="panel set-grid">' + txt('training', 'Training team') + txt('heads.SWE', 'Vertical head · SWE') + txt('heads.PM', 'Vertical head · PM') + txt('heads.Data', 'Vertical head · Data') + '</div></section>' +
-      '<section class="set-sec"><div class="set-head"><div><h2>Weekly digest</h2><p class="muted">Monday morning: calls scored, who cleared, who’s waiting on another call, and who scored. Goes to the training team, every vertical head and anyone added here.' +
+      '<section class="set-sec"><div class="set-head"><div><h2>Who gets copied</h2><p class="muted">Only @halcyon.example addresses. Separate them with commas. The scorer and the trainee’s manager come from each scorecard.</p></div></div>' +
+        '<div class="panel set-grid">' + txt('training', 'Training team') + txt('heads.SEO', 'Discipline lead · SEO') + txt('heads.Social', 'Discipline lead · Social') + txt('heads.Paid', 'Discipline lead · Paid') + '</div></section>' +
+      '<section class="set-sec"><div class="set-head"><div><h2>Weekly digest</h2><p class="muted">Monday morning: calls scored, who cleared, who’s waiting on another call, and who scored. Goes to the training team, every discipline head and anyone added here.' +
         (d.digestSent ? ' Last sent ' + esc(d.digestSent) + '.' : '') + '</p></div>' + sw('digest.on', 'Send every Monday') + '</div>' +
-        '<div class="panel">' + txt('digest.extra', 'Also send it to', { ph: 'head.of.sales@kestrel.example' }) +
+        '<div class="panel">' + txt('digest.extra', 'Also send it to', { ph: 'head.of.sales@halcyon.example' }) +
         '<div class="mail-actions"><button class="btn btn-ghost btn-sm" type="button" data-preview="digest">Preview this week’s</button><button class="link-btn" type="button" data-test="digest">Send me a test</button></div></div></section>' +
       '<section class="set-sec"><div class="set-head"><div><h2>AI coach</h2><p class="muted">' + 'Runs on Cloudflare Workers AI (Llama 3.3 70B) inside HAWKEYE, with no API key. It writes a take on each call the first time the trainee opens it and answers trainees’ questions about their own scorecards. Switch it off here and trainees get the standard summaries.' + '</p></div>' + sw('ai', 'Coach on') + '</div>' +
         '<div class="panel set-grid">' + txt('chatPerDay', 'Questions per trainee per day', { type: 'number' }) + '</div></section>' +
@@ -2762,7 +2741,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
 </style>
 <script>
 (function () {
-  var ROLES = [{"id":"trainee","label":"Trainee","role":"trainee","token":"demo:maya.fernandes@kestrel.example","hash":"#/mine"},{"id":"admin","label":"Admin","role":"admin","token":"demo:jordan.lee@kestrel.example","hash":""}], TOKEN = "mcp-token";
+  var ROLES = [{"id":"trainee","label":"New starter","role":"trainee","token":"demo:maya.fernandes@halcyon.example","hash":"#/mine"},{"id":"admin","label":"Admin","role":"admin","token":"demo:jordan.lee@halcyon.example","hash":""}], TOKEN = "mcp-token";
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function set(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
   function enter(id) {
@@ -2777,7 +2756,7 @@ html.on-landing .btn-primary:hover { filter: brightness(1.08); }
     var d = document.createElement('div'); d.className = 'demo-skip';
     d.innerHTML = '<p><b>Demo.</b> No real sign-in, no real data. Skip straight in as:</p><div class="row">' +
       ROLES.map(function (r) { return '<button type="button" data-demo="' + r.id + '">' + r.label + '</button>'; }).join('') +
-      '</div><small>Or type any name@kestrel.example email and any 6-digit code.</small>';
+      '</div><small>Or type any name@halcyon.example email and any 6-digit code.</small>';
     host.appendChild(d);
     d.addEventListener('click', function (e) { var b = e.target.closest('[data-demo]'); if (b) enter(b.getAttribute('data-demo')); });
   }
