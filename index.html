@@ -1,0 +1,2799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HAWKEYE · Mock call portal demo</title>
+  <script>
+    (function () {
+      var t = null, signedIn = false;
+      try { t = localStorage.getItem('origin-theme'); signedIn = !!localStorage.getItem('mcp-token'); } catch (e) {}
+      if (t !== 'light' && t !== 'dark') {
+        t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+      }
+      // Signed out: the landing page's fixed night look, set before paint.
+      if (!signedIn) { t = 'dark'; document.documentElement.classList.add('on-landing'); }
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <script>window.__MOCK_DEF__ = {"criteria":[{"key":"intro","label":"Introduction","header":"Introduction"},{"key":"context","label":"Context set-up","header":"Context set-up"},{"key":"profiling","label":"Profiling","header":"Profiling"},{"key":"mtnut","label":"Fit check","header":"Fit check"},{"key":"mapping","label":"Profile mapping","header":"Profile mapping"},{"key":"community","label":"Kestrel and community","header":"Kestrel and community"},{"key":"program","label":"Program details","header":"Program details"},{"key":"placement","label":"Career support","header":"Career support","na":true},{"key":"rebuttal","label":"Objection handling","header":"Objection handling"},{"key":"usps","label":"What sets us apart","header":"What sets us apart"},{"key":"urgency","label":"Urgency","header":"Urgency"},{"key":"schedule","label":"Call schedule","header":"Call schedule","presales":true}],"fields":[{"key":"conductedBy","group":"details","label":"Mock call conducted by","type":"text","max":80,"help":"Your name, as trainees know you."},{"key":"candidateEmail","group":"details","label":"Candidate email ID","type":"email","max":120,"help":"Their @kestrel.example address. This is how they find their scorecard, and where it’s emailed."},{"key":"candidateName","group":"details","label":"Candidate name","type":"text","max":120},{"key":"managerEmail","group":"details","label":"Their reporting manager’s email","type":"email","max":120,"optional":true,"help":"Optional. They’re copied on the scorecard email. Filled in from earlier calls when we know it."},{"key":"role","group":"details","label":"Role","type":"radio","options":[{"value":"presales","label":"Pre-sales · Qualifier"},{"value":"sales","label":"Sales · Advisor"}]},{"key":"vertical","group":"details","label":"Vertical","type":"radio","options":[{"value":"SWE","label":"SWE"},{"value":"PM","label":"PM"},{"value":"Data","label":"Data"}]},{"key":"round","group":"details","label":"Mock call round","type":"radio","options":[{"value":"Round 1","label":"Round 1 · Trainer"},{"value":"Round 2","label":"Round 2 · Vertical team"},{"value":"Additional attempt","label":"Additional attempt"}]},{"key":"customer","group":"details","label":"Customer profile for the mock call","type":"text","max":300,"help":"The persona you played, e.g. Senior engineer at a SaaS company, 6 yrs exp."},{"key":"verdict","group":"close","label":"Final verdict","type":"radio","options":[{"value":"Good to Go","label":"Good to go"},{"value":"Need to Improve","label":"Need to improve"}]},{"key":"remarks","group":"close","label":"Final detailed remarks","type":"textarea","max":4000,"help":"The overall picture: what to keep doing and what to fix before the next call."},{"key":"recording","group":"close","label":"Call recording (link)","type":"url","max":500,"help":"Paste a link to the recording."},{"key":"duration","group":"close","label":"Total call duration (minutes)","type":"number","min":1,"max":240}]};</script>
+  <script>// HAWKEYE demo backend: every answer is canned, nothing leaves the browser. Kestrel Academy is a made-up company.
+// Any 6-digit code signs you in. jordan.lee@ is a super-admin (Settings); new…@ has no calls; wip…@ hasn't cleared yet.
+(function () {
+  var DEF = window.__MOCK_DEF__;
+  var PASS = { presales: 3.5, sales: 4 };
+  var submitted = [];
+
+  function user(email) {
+    var name = email.split('@')[0].split(/[._-]+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+    var tier = /^jordan\.|^ana\./.test(email) ? 1 : /^admin/.test(email) ? 2 : 3;
+    return { ok: true, email: email, name: name, firstName: name.split(' ')[0], tier: tier, isAdmin: tier < 3, isSuper: tier === 1, coach: true, form: { fields: DEF.fields, criteria: DEF.criteria.map(function (c) { return { key: c.key, label: c.label, na: !!c.na, presales: !!c.presales }; }), pass: PASS } };
+  }
+  var current = 'maya.fernandes@kestrel.example';
+
+  function call(date, round, by, scores, fb, verdict, remarks, extra) {
+    var criteria = DEF.criteria.map(function (c, i) {
+      return { key: c.key, label: c.label, score: scores[i] == null ? null : scores[i], feedback: fb[i] || '' };
+    });
+    var vals = scores.filter(function (s) { return typeof s === 'number'; });
+    var avg = Math.round(vals.reduce(function (a, b) { return a + b; }, 0) / vals.length * 100) / 100;
+    return Object.assign({ id: 100 + (++ids), date: date, conductedBy: by, candidateName: 'Maya Fernandes', vertical: 'PM', role: 'presales', round: round,
+      customer: 'Senior engineer at a SaaS company, 6 yrs exp', duration: 24, verdict: verdict, remarks: remarks,
+      recording: 'https://example.com/kestrel/recording', recording2: '', score: avg, criteria: criteria }, extra || {});
+  }
+
+  var ids = 0;
+  var SAMPLE = [
+    call('2026-09-21T10:30:00Z', 'Round 1', 'Jordan Lee',
+      [4, 4, 3, 2, 2, 3, 4, null, 3, 3, 2, 3],
+      ['Good introduction, but forgot to greet the customer.', 'Set the agenda but skipped the Kestrel overview.', 'Asked about the journey and tools, but missed stakeholders and prior product exposure.',
+        'Only checked the need (why PM). Timeline and money were not covered.', 'Explained the PM JD but didn’t connect it to the gaps in the profile.', 'Mentioned offline events only. Missed P2P learning and masterclasses.',
+        'Good structure: timeline, modules and projects. Name-drop the instructors next time.', '', 'Answered confidently but didn’t explore the objection before responding.',
+        'Mentioned tools access but not how it helps this profile.', 'No urgency created before moving to the call schedule.', 'Scheduled the call but didn’t ask for the resume or LinkedIn.'],
+      'Need to Improve', 'Good confidence and a clear voice. Work on the fit check, profile mapping and urgency before the next round.\nPractise hearing the whole objection before answering.', { duration: 22 }),
+    call('2026-09-24T09:00:00Z', 'Additional attempt', 'Ana Costa',
+      [5, 4, 4, 3, 3, 4, 4, null, 4, 3, 3, 4],
+      ['Greeted warmly, good intro.', 'Lead source and agenda set. Kestrel intro could be crisper.', 'Covered journey, tools and stakeholders. Missed prior product exposure.',
+        'N = why PM, T = when transitioning. Money was not checked.', 'Role mapping done; curriculum mapping only when prompted.', 'P2P learning, offline events and the job portal. Give a real event example.',
+        'Course timeline, modules, capstone and mentors.', '', 'Explored each objection, factual responses.', 'Covered three USPs, but say the benefit for each one.',
+        'Cohort date mentioned. Make it personal to the prospect’s trigger.', 'Natural transition, checked time. Ask for LinkedIn for the roadmap.'],
+      'Need to Improve', 'Clear progress. Profiling and rebuttals are now solid. Bring money into the fit check and make urgency personal.', { duration: 27 }),
+    call('2026-09-29T11:15:00Z', 'Round 2', 'Marcus Bell',
+      [5, 5, 5, 4, 4, 4, 5, null, 4, 4, 4, 5],
+      ['Warm, natural greeting.', 'Lead source, agenda and a one-line Kestrel intro.', 'Academic and work background, stakeholders, tools and AI exposure, why PM.',
+        'M = CTC, T = when transitioning, N = why PM. Good rapport throughout.', 'Role and curriculum mapping in the first 10 minutes. Strong hook.', 'Small cohorts, peer reviews, meetups, masterclasses.',
+        'Structured and interactive. Tied modules to the profile.', '', 'Confident, explored before answering.', 'Tools, mentorship and the alumni network, each with a benefit.',
+        'Cohort start date and scholarship, tied to the appraisal cycle.', 'Asked for LinkedIn, set the agenda, booked a specific slot.'],
+      'Good to Go', 'Great call. Clear structure and genuine rapport. Keep the pace steady when explaining the program.', { duration: 25, ai: {
+        headline: 'A confident, well-structured call that cleared Round 2',
+        summary: 'You opened warmly, ran a conversational discovery and mapped the PM role to your prospect’s gaps inside ten minutes. That is a full point up on your first call, with the fit check and urgency finally working for you.',
+        strengths: [{ criterion: 'Profile mapping', note: 'Role and curriculum mapping landed in the first 10 minutes, which hooked the prospect early.' }, { criterion: 'Call schedule', note: 'You asked for LinkedIn, set the agenda and booked a specific slot.' }],
+        focus: [{ criterion: 'USPs', fix: 'Keep tying each USP to a benefit: “Alumni review your portfolio, so you hear what hiring managers notice.”' }, { criterion: 'Urgency', fix: 'Your appraisal-cycle hook worked; have a second trigger ready in case the prospect doesn’t have one.' }],
+        nextCall: 'On the floor, open every call with the same crisp lead source and agenda you used here.'
+      } })
+  ];
+
+  var CFG = {
+    emails: true,
+    types: {
+      r1: { on: true, cc: { scorer: true, manager: true, head: true, training: false }, subject: 'Your Round 1 mock call: {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your Round 1 mock call with {scorer}.' },
+      r2: { on: true, cc: { scorer: true, manager: true, head: true, training: true }, subject: 'Your Round 2 mock call: {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your Round 2 mock call with {scorer}.' },
+      extra: { on: true, cc: { scorer: true, manager: true, head: true, training: true }, subject: 'Your mock call ({round}): {score}/5 · {verdict}', intro: 'Hi {first},\n\nHere’s your scorecard from your latest mock call with {scorer}.' }
+    },
+    training: 'jordan.lee@kestrel.example, ana.costa@kestrel.example',
+    heads: { SWE: 'kiran.rao@kestrel.example', PM: 'elena.petrova@kestrel.example', Data: 'tomas.silva@kestrel.example' },
+    digest: { on: false, extra: '' }, ai: true, chatPerDay: 40
+  };
+  var PEOPLE = [
+    { email: 'jordan.lee@kestrel.example', name: 'Jordan Lee', tier: 1, fixed: true },
+    { email: 'ana.costa@kestrel.example', name: 'Ana Costa', tier: 1, fixed: true },
+    { email: 'elena.petrova@kestrel.example', name: 'Elena Petrova', tier: 2 },
+    { email: 'kiran.rao@kestrel.example', name: 'Kiran Rao', tier: 2 }
+  ];
+  function admin(email) {
+    return { ok: true, cfg: JSON.parse(JSON.stringify(CFG)), canEdit: /^jordan|^ana/.test(email), me: email, aiKey: true, digestSent: '',
+      typeNames: { r1: 'Round 1', r2: 'Round 2', extra: 'Additional attempts' }, people: PEOPLE,
+      log: [{ at: '2026-11-16T09:30:00Z', kind: 'Scorecard', to: 'noah.kim@kestrel.example', cc: ['jordan.lee@kestrel.example', 'elena.petrova@kestrel.example'], subject: 'Your Round 1 mock call: 3.64/5 · Need to improve', ok: true }] };
+  }
+  var weeks = [], pulseVals = [4.6, 4.5, 4.1, 3.3, 3.6, 3.6, 4.0, 3.7, 3.9, 3.7, 3.2, 3.8];
+  for (var w = 9; w >= 0; w--) weeks.push({ w: new Date(Date.UTC(2026, 10, 16) - w * 7 * 864e5).toISOString().slice(0, 10), n: [6, 9, 4, 11, 8, 13, 7, 10, 12, 5][9 - w], avg: 3.6 + (w % 3) / 10 });
+
+  window.MOCK_PREVIEW_API = {
+    apiMockPublicStats: function () {
+      var avg = {};
+      DEF.criteria.forEach(function (c, i) {
+        var a = pulseVals[i], cell = function (d) { return Math.round((a + d) * 100) / 100; };
+        var gp = c.key === 'placement';
+        avg[c.key] = { all: { all: cell(0), presales: cell(-0.1), sales: c.presales ? null : cell(0.08) }, SWE: { all: cell(-0.15), presales: cell(-0.2), sales: c.presales ? null : cell(-0.05) },
+          PM: { all: cell(0.05), presales: cell(-0.05), sales: c.presales ? null : cell(0.1) }, Data: { all: gp ? null : cell(-0.05), presales: gp ? null : cell(0.1), sales: gp || c.presales ? null : cell(-0.08) } };
+      });
+      return { ok: true, month: 'November', total: 214, from: 'May 2026', to: 'Nov 2026', calls: 31, callsPrev: 44, cleared: 9, clearedPrev: 12,
+        avgScore: 3.86, avgScorePrev: 3.71, firstTry: 64, firstTryN: 39, callsToClear: 2.4, weeks: weeks,
+        pulse: DEF.criteria.map(function (c, i) { return { key: c.key, label: c.label, avg: pulseVals[i], n: 60, delta: [0.1, 0, 0.05, 0.31, -0.1, 0.12, 0, 0.02, 0.08, -0.05, 0.2, 0][i] }; }),
+        byVertical: [{ v: 'SWE', calls: 34, avg: 3.71, passRate: 68 }, { v: 'PM', calls: 58, avg: 3.92, passRate: 77 }, { v: 'Data', calls: 21, avg: 3.84, passRate: 71 }],
+        averages: avg, counts: { all: { all: 214, presales: 90, sales: 118 }, SWE: { all: 62, presales: 35, sales: 25 }, PM: { all: 112, presales: 45, sales: 65 }, Data: { all: 40, presales: 10, sales: 28 } },
+        pass: PASS };
+    },
+    apiMockCandidate: function (t, email) {
+      if (/^noah/.test(email)) return { ok: true, email: email, name: 'Noah Kim', vertical: 'SWE', role: 'presales', managerEmail: 'kiran.rao@kestrel.example', count: 1,
+        calls: [{ date: '2026-11-10T10:00:00Z', round: 'Round 1', score: 3.18, verdict: 'Need to Improve', by: 'Jordan Lee' }], suggestedRound: 'Additional attempt' };
+      return { ok: true, email: email, name: '', vertical: '', role: '', managerEmail: '', count: 0, calls: [], suggestedRound: 'Round 1' };
+    },
+    apiMockSummary: function (t, id) {
+      return { ok: true, id: id, ai: {
+        headline: id === 101 ? 'A confident first call held back by the fit check and urgency' : 'Clear progress: profiling and rebuttals are now solid',
+        summary: id === 101 ? 'You sounded confident and kept a clear structure, but the fit check stopped at “why PM” and the close had no reason to act now.' : 'Up 0.73 on your first call. Discovery is conversational now; money in the fit check and a personal urgency hook are what’s left.',
+        strengths: [{ criterion: 'Introduction', note: 'Warm and clear, even if you forgot the greeting once.' }],
+        focus: [{ criterion: 'the fit check', fix: 'Add money and timeline: ask about CTC while discussing outcomes, and when they want to switch.' }, { criterion: 'Urgency', fix: 'Tie it to their trigger, not just the cohort date.' }],
+        nextCall: 'Write and rehearse one personal urgency line for a PM switcher.' } };
+    },
+    apiMockCoach: function (t, msgs) {
+      var q = msgs[msgs.length - 1].content;
+      return { ok: true, left: 37, reply: 'Start with **the fit check**: it was your lowest score on two of three calls.\n\n- Ask about current CTC while you talk about outcomes, not as an opener.\n- Ask when they want to switch: “Are you looking to move this year, or exploring?”\n\nYou asked: “' + q.slice(0, 60) + '”. Want three practice lines for it?' };
+    },
+    apiMockAdmin: function (t) { return admin(String(t).split(':')[1] || current); },
+    apiMockAdminSet: function (t, op) {
+      if (op.type === 'cfg') CFG = JSON.parse(JSON.stringify(op.cfg));
+      if (op.type === 'access') {
+        var e = op.op.email.toLowerCase(), p = PEOPLE.filter(function (x) { return x.email === e; })[0];
+        if (op.op.type === 'add') { if (p) p.tier = 2; else PEOPLE.push({ email: e, name: op.op.name || e, tier: 2 }); }
+        if (op.op.type === 'setTier' && p) PEOPLE.splice(PEOPLE.indexOf(p), 1);
+      }
+      return admin(String(t).split(':')[1] || current);
+    },
+    apiMockEmailPreview: function (t, kind, cfg) {
+      var ty = cfg.types[kind] || cfg.types.r1;
+      return { ok: true, subject: kind === 'digest' ? 'HAWKEYE weekly: 12 mock calls, 3 cleared' : ty.subject.replace('{score}', '3.64').replace('{verdict}', 'Need to improve').replace('{round}', 'Additional attempt'),
+        to: 'the trainee', cc: ['the scorer', 'their.manager@kestrel.example'],
+        html: '<div style="font-family:Arial;padding:30px;background:#F4F1FA"><div style="background:#fff;border-radius:16px;padding:26px;max-width:600px"><b style="color:#6D3EF0;letter-spacing:4px">HAWKEYE</b><p>' + (kind === 'digest' ? 'Weekly digest preview' : ty.intro.replace(/\n/g, '<br>')) + '</p><p style="font-size:40px;font-family:Georgia">3.64 / 5</p></div></div>' };
+    },
+    apiMockEmailTest: function (t) { return { ok: true, sentTo: String(t).split(':')[1] || current }; },
+    apiMockRequestOtp: function (email) { current = email; return { ok: true, email: email, resendIn: 8 }; },
+    apiMockVerifyOtp: function (email, code) {
+      if (!/^\d{6}$/.test(String(code || ''))) return { ok: false, error: 'Any 6 digits work in the demo.' };
+      var u = user(email); u.token = 'demo:' + email; return u;
+    },
+    apiMockSession: function (token) { return user(String(token).split(':')[1] || current); },
+    apiMockSubmit: function (token, answers) {
+      window.__lastMock = answers;
+      submitted.push(answers);
+      var s = [];
+      Object.keys(answers.criteria).forEach(function (k) { var r = answers.criteria[k].rating; if (/^[1-5]$/.test(r)) s.push(Number(r)); });
+      return { ok: true, score: Math.round(s.reduce(function (a, b) { return a + b; }, 0) / s.length * 100) / 100, verdict: answers.verdict, candidateName: answers.candidateName,
+        email: { sent: true, to: answers.candidateEmail, cc: ['jordan.lee@kestrel.example', answers.managerEmail, 'kiran.rao@kestrel.example'].filter(Boolean) } };
+    },
+    apiMockMyCalls: function (token) {
+      var email = String(token).split(':')[1] || current;
+      // new… = no calls yet; wip… = not cleared yet (holistic summary locked); anyone else = cleared after 3 calls.
+      var list = /^new/.test(email) ? [] : /^wip/.test(email) ? SAMPLE.slice(0, 2) : SAMPLE;
+      return { ok: true, calls: JSON.parse(JSON.stringify(list)), pass: PASS };
+    }
+  };
+})();
+</script>
+  <link rel="icon" href="mock-favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="mock-favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="mock-apple-touch-icon.png">
+  <meta name="theme-color" content="#0A0714">
+  <meta name="description" content="HAWKEYE · a mock call scoring portal with an AI coach (portfolio demo with fictional data).">
+  <style>
+/* ============ Tokens (shared with ORIGIN) ============ */
+:root {
+  --bg: #F6F5F1;
+  --surface: #FFFFFF;
+  --surface-2: #F0EEE9;
+  --ink: #121117;
+  --ink-2: #45434E;
+  --muted: #6E6B77;
+  --line: #E4E1DA;
+  --line-2: #D3CFC6;
+  --accent: #6438F5;
+  --accent-btn: #6438F5;
+  --accent-btn-hover: #5428E6;
+  --accent-soft: #EFEAFF;
+  --accent-line: #CDBFFD;
+  --bar: #7B54E8;
+  --bar-dim: #D9CFFB;
+  --ok: #1B7F55;
+  --ok-soft: #E3F4EC;
+  --warn: #A4500F;
+  --warn-soft: #FBEEE2;
+  --danger: #B42F25;
+  --logo-slash: #E4DCFB;
+  --shadow: 0 1px 2px rgba(18,17,23,.04), 0 12px 32px rgba(18,17,23,.06);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #0C0B10;
+  --surface: #14131A;
+  --surface-2: #1B1A22;
+  --ink: #F2F0F7;
+  --ink-2: #C8C5D2;
+  --muted: #9693A2;
+  --line: #24222D;
+  --line-2: #34313F;
+  --accent: #A68DFF;
+  --accent-btn: #6A45FA;
+  --accent-btn-hover: #7A58FF;
+  --accent-soft: #1E1834;
+  --accent-line: #43367E;
+  --bar: #9D82FF;
+  --bar-dim: #3A3160;
+  --ok: #5ED39E;
+  --ok-soft: #12271E;
+  --warn: #F0A462;
+  --warn-soft: #2A1C10;
+  --danger: #FF7B6E;
+  --logo-slash: #F5F1FE;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+  color-scheme: dark;
+}
+
+/* ============ Base ============ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh; display: flex; flex-direction: column;
+  transition: background-color .25s ease, color .25s ease;
+}
+main { flex: 1; }
+[hidden] { display: none !important; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+h1, h2, h3, h4 { margin: 0; font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; }
+p { margin: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+::selection { background: var(--accent-soft); }
+.mono { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.muted { color: var(--muted); }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.wrap { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 28px 72px; }
+.wrap.narrow { max-width: 520px; }
+.back { display: inline-block; margin: 8px 0 22px; font-size: 13px; color: var(--muted); }
+.back:hover { color: var(--ink); text-decoration: none; }
+.fine { font-size: 12.5px; color: var(--muted); margin-top: 14px; }
+
+/* ============ Top bar ============ */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  max-width: 1120px; width: 100%; margin: 0 auto; padding: 22px 28px;
+}
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); }
+.brand:hover { text-decoration: none; }
+.logo-mark { width: 30px; height: auto; display: block; }
+.wordmark { font-weight: 600; font-size: 17px; letter-spacing: -0.02em; }
+.brand-tag {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+}
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.who { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 12px;
+}
+.who-email { color: var(--ink-2); }
+.link-btn { white-space: nowrap; background: none; border: 0; padding: 0; color: var(--accent); font-size: 13px; }
+.link-btn:hover { text-decoration: underline; text-underline-offset: 3px; }
+.theme-toggle { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.theme-toggle button { width: 28px; height: 28px; border-radius: 50%; border: 0; background: none; color: var(--muted); display: grid; place-items: center; }
+.theme-toggle button svg { width: 15px; height: 15px; }
+.theme-toggle button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+
+.foot {
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  max-width: 1120px; width: 100%; margin: 0 auto; padding: 22px 28px 30px;
+  border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted);
+}
+
+/* ============ Buttons & inputs ============ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 999px; border: 1px solid transparent; padding: 11px 20px;
+  font-weight: 500; font-size: 14.5px; transition: background-color .15s ease, transform .1s ease;
+}
+.btn:hover { text-decoration: none; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent-btn); color: #fff; }
+.btn-primary:hover { background: var(--accent-btn-hover); }
+.btn-ghost { background: var(--surface); border-color: var(--line-2); color: var(--ink); }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn-block { width: 100%; margin-top: 14px; }
+.btn.is-busy { opacity: .7; pointer-events: none; }
+.btn.is-busy::after {
+  content: ''; width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.field-label { display: block; font-size: 13.5px; font-weight: 500; margin-bottom: 6px; color: var(--ink); }
+.input, textarea.input {
+  width: 100%; padding: 11px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--line-2); background: var(--surface); color: var(--ink);
+  font: inherit; font-size: 15px; transition: border-color .15s ease, box-shadow .15s ease;
+}
+textarea.input { min-height: 84px; resize: vertical; line-height: 1.5; }
+.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.input::placeholder { color: var(--muted); opacity: .8; }
+.otp-input { font-family: var(--mono); font-size: 24px; letter-spacing: .5em; text-align: center; }
+.form-msg { min-height: 20px; margin-top: 10px; font-size: 13.5px; color: var(--danger); }
+.form-msg.is-ok { color: var(--ok); }
+
+/* ============ Cards ============ */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.signin { padding: 30px; }
+.signin h2 { font-size: 26px; margin: 8px 0 8px; }
+.signin .lead { color: var(--ink-2); margin-bottom: 20px; font-size: 14.5px; }
+.otp-actions { display: flex; justify-content: space-between; margin-top: 14px; }
+
+/* ============ Home ============ */
+.home-hero { padding: 36px 0 34px; max-width: 760px; }
+.display {
+  font-family: var(--serif); font-weight: 400; font-size: clamp(48px, 8vw, 88px);
+  line-height: .98; letter-spacing: -0.02em; margin: 14px 0 18px;
+}
+.display .dot { color: var(--accent); }
+.hero-sub { font-size: 17px; color: var(--ink-2); max-width: 560px; }
+.options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.option {
+  position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 260px;
+  padding: 26px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  color: var(--ink); box-shadow: var(--shadow); overflow: hidden;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.option::before {
+  content: ''; position: absolute; inset: auto -40% -60% auto; width: 240px; height: 240px; border-radius: 50%;
+  background: radial-gradient(closest-side, var(--accent-soft), transparent); opacity: 0; transition: opacity .3s ease;
+}
+.option:hover { text-decoration: none; transform: translateY(-3px); border-color: var(--accent-line); }
+.option:hover::before { opacity: 1; }
+.opt-num { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--muted); }
+.opt-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin: 4px 0 6px; }
+.opt-icon svg { width: 22px; height: 22px; }
+.opt-title { font-size: 21px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.2; }
+.opt-sub { color: var(--ink-2); font-size: 14px; flex: 1; position: relative; }
+.opt-go { color: var(--accent); font-size: 14px; font-weight: 500; position: relative; }
+.home-facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 40px; border-top: 1px solid var(--line); }
+.home-facts > div { padding: 18px 18px 0 0; display: flex; flex-direction: column; gap: 2px; }
+.home-facts b { font-family: var(--serif); font-weight: 400; font-size: 38px; line-height: 1; }
+.home-facts span { font-size: 13px; color: var(--muted); }
+
+/* ============ Page head ============ */
+.page-head { margin-bottom: 26px; max-width: 760px; }
+.page-head h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(38px, 5.5vw, 56px); line-height: 1; margin: 10px 0 12px; letter-spacing: -0.01em; }
+.page-head .lede { color: var(--ink-2); font-size: 16px; }
+
+/* ============ Scoring form ============ */
+.score-bar {
+  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  padding: 12px 18px; margin: 0 0 22px; background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+}
+.sb-progress { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--ink-2); flex: 1; min-width: 200px; }
+.sb-progress .bar { flex: 1; max-width: 220px; height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.sb-progress .bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width .3s ease; }
+.sb-score { font-size: 13px; display: flex; align-items: baseline; gap: 6px; }
+.sb-score b { font-family: var(--serif); font-weight: 400; font-size: 28px; line-height: 1; }
+.sb-pass { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; margin-left: 6px; }
+.sb-pass.is-above { background: var(--ok-soft); color: var(--ok); }
+.sb-pass.is-below { background: var(--warn-soft); color: var(--warn); }
+.form-sec { margin-bottom: 34px; }
+.form-sec-head { margin-bottom: 14px; }
+.form-sec-head h2 { font-size: 24px; margin: 6px 0 4px; }
+.form-sec-head p { font-size: 13.5px; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+.field { min-width: 0; }
+.field.is-wide { grid-column: 1 / -1; }
+.field .help { font-size: 12.5px; color: var(--muted); margin: -2px 0 8px; }
+.field .err, .crit .err { font-size: 12.5px; color: var(--danger); margin-top: 6px; display: none; }
+.field.has-error .err, .crit.has-error .err { display: block; }
+.field.has-error .input, .crit.has-error textarea.input { border-color: var(--danger); }
+.field.has-error .pills, .crit.has-error .rating { box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 40%, transparent); border-radius: 12px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { position: relative; }
+.pill input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.pill span {
+  display: inline-block; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-2);
+  background: var(--surface); font-size: 14px; transition: all .15s ease;
+}
+.pill input:checked + span { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pill:hover span { border-color: var(--accent-line); }
+
+.crit-list { display: flex; flex-direction: column; gap: 12px; }
+.crit {
+  display: grid; grid-template-columns: 220px 1fr; gap: 6px 24px; padding: 20px 22px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  transition: border-color .2s ease;
+}
+.crit.is-rated { border-color: var(--accent-line); }
+.crit-head { display: flex; flex-direction: column; gap: 4px; }
+.crit-num { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .1em; }
+.crit-name { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+.crit-hint { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.crit-hint a { font-size: 12.5px; }
+.crit-tag { align-self: flex-start; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--warn); background: var(--warn-soft); padding: 2px 7px; border-radius: 99px; }
+.crit-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.rating { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.rate { position: relative; }
+.rate input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.rate span {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 64px; height: 50px; padding: 0 8px;
+  border-radius: 10px; border: 1px solid var(--line-2); background: var(--surface); transition: all .15s ease; line-height: 1.1;
+}
+.rate span b { font-size: 17px; font-weight: 500; }
+.rate span small { font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.rate:hover span { border-color: var(--accent-line); }
+.rate input:checked + span { background: var(--accent-btn); border-color: var(--accent-btn); color: #fff; }
+.rate input:checked + span small { color: rgba(255,255,255,.82); }
+.rate input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rate.is-na span { min-width: 56px; }
+.verdict-hint { margin-bottom: 14px; padding: 12px 16px; border-radius: 12px; font-size: 14px; background: var(--accent-soft); color: var(--ink); border: 1px solid var(--accent-line); }
+.form-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+
+.done-card { padding: 36px 30px; text-align: center; }
+.done-tick { width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: var(--ok-soft); color: var(--ok); }
+.done-card h2 { font-family: var(--serif); font-weight: 400; font-size: 38px; margin: 8px 0 10px; }
+.done-card .lead { color: var(--ink-2); }
+.done-actions { display: flex; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+
+/* ============ My score ============ */
+.mine-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; }
+.mine-head h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5vw, 52px); line-height: 1; margin-top: 10px; }
+.call-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.call-nav .icon-btn:disabled { opacity: .35; cursor: default; }
+.icon-btn { width: 36px; height: 36px; flex: none; border-radius: 50%; border: 1px solid var(--line-2); background: var(--surface); display: grid; place-items: center; font-size: 15px; color: var(--ink); }
+.icon-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.call-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px; scrollbar-width: thin; flex: 1; }
+.call-tab {
+  flex: none; display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 14px; min-width: 150px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+}
+.call-tab .ct-top { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.call-tab .ct-main { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.call-tab .ct-main b { font-weight: 600; }
+.call-tab[aria-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.dotv { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.dotv.ok { background: var(--ok); }
+.dotv.warn { background: var(--warn); }
+
+.res-grid { display: grid; grid-template-columns: 340px 1fr; gap: 16px; margin-bottom: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; min-width: 0; }
+.panel h3 { font-size: 18px; margin-bottom: 12px; }
+.score-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.ring { position: relative; width: 168px; height: 168px; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .track { stroke: var(--surface-2); }
+.ring .val { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1); }
+.ring .pass-tick { stroke: var(--ink); stroke-width: 2.5; }
+.ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-label b { font-family: var(--serif); font-weight: 400; font-size: 54px; line-height: 1; }
+.ring-label span { font-size: 12.5px; color: var(--muted); }
+.verdict { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-weight: 500; font-size: 14px; }
+.verdict.ok { background: var(--ok-soft); color: var(--ok); }
+.verdict.warn { background: var(--warn-soft); color: var(--warn); }
+.pass-line { font-size: 13px; color: var(--ink-2); }
+.meta { width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; text-align: left; font-size: 13.5px; padding-top: 14px; border-top: 1px solid var(--line); }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+.summary-text { font-size: 16px; line-height: 1.65; color: var(--ink); }
+.summary-text + .summary-text { margin-top: 10px; }
+.quote { margin-top: 18px; padding: 16px 18px; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 12px 12px 0; }
+.quote p { white-space: pre-line; font-size: 14.5px; color: var(--ink-2); }
+.quote .by { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.trend { margin-top: 20px; }
+.trend-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.trend svg { width: 100%; height: auto; display: block; overflow: visible; }
+.trend .grid { stroke: var(--line); stroke-width: 1; }
+.trend .axis-t { fill: var(--muted); font-size: 11px; font-family: var(--sans); }
+.trend .pass { stroke: var(--muted); stroke-dasharray: 4 4; stroke-width: 1.2; }
+.trend .ln { stroke: var(--bar); stroke-width: 2; fill: none; }
+.trend .pt { fill: var(--bar); stroke: var(--surface); stroke-width: 2; }
+.trend .pt.is-cur { r: 7; }
+.trend .hit { fill: transparent; cursor: pointer; }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.sw-list { display: flex; flex-direction: column; gap: 12px; }
+.sw { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+.sw-score { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 600; font-size: 15px; grid-row: span 2; }
+.sw-score.hi { background: var(--ok-soft); color: var(--ok); }
+.sw-score.lo { background: var(--warn-soft); color: var(--warn); }
+.sw-name { font-weight: 500; }
+.sw-fb { font-size: 13.5px; color: var(--ink-2); }
+.sw-fb a { font-size: 13px; }
+.panel-icon { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; margin-right: 8px; font-size: 13px; vertical-align: -3px; }
+.panel-icon.hi { background: var(--ok-soft); color: var(--ok); }
+.panel-icon.lo { background: var(--warn-soft); color: var(--warn); }
+.empty-note { font-size: 14px; color: var(--muted); }
+
+.breakdown { display: flex; flex-direction: column; }
+.bd-row { display: grid; grid-template-columns: 200px 150px 1fr; gap: 18px; padding: 16px 0; border-top: 1px solid var(--line); align-items: start; }
+.bd-row:first-child { border-top: 0; padding-top: 4px; }
+.bd-name { font-weight: 500; display: flex; flex-direction: column; gap: 2px; }
+.bd-name small { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; color: var(--muted); font-weight: 400; }
+.bd-score { display: flex; align-items: center; gap: 10px; }
+.segs { display: flex; gap: 2px; }
+.segs i { width: 16px; height: 8px; background: var(--bar-dim); }
+.segs i:first-child { border-radius: 4px 0 0 4px; }
+.segs i:last-child { border-radius: 0 4px 4px 0; }
+.segs i.on { background: var(--bar); }
+.bd-val { font-weight: 600; font-size: 14px; min-width: 26px; }
+.delta { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 99px; }
+.delta.up { color: var(--ok); background: var(--ok-soft); }
+.delta.down { color: var(--warn); background: var(--warn-soft); }
+.bd-fb { font-size: 14px; color: var(--ink-2); white-space: pre-line; }
+.bd-fb .guide-link { display: inline-block; margin-top: 4px; font-size: 12.5px; }
+.na { font-size: 13px; color: var(--muted); }
+
+.empty { text-align: center; padding: 56px 24px; }
+.empty h2 { font-family: var(--serif); font-weight: 400; font-size: 36px; margin: 10px 0 10px; }
+.empty p { color: var(--ink-2); max-width: 460px; margin: 0 auto; }
+.empty .btn { margin-top: 22px; }
+
+/* ============ Metrics ============ */
+.facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.fact b { display: block; font-family: var(--serif); font-weight: 400; font-size: 30px; line-height: 1.05; margin: 6px 0 4px; }
+.fact span { font-size: 13px; color: var(--ink-2); }
+.flow { display: grid; grid-template-columns: 2fr 2fr 5fr 3fr; gap: 10px; margin-bottom: 30px; }
+.phase { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.phase:not(:last-child)::after {
+  content: '→'; position: absolute; right: -12px; top: 18px; width: 14px; text-align: center; color: var(--muted); font-size: 13px;
+}
+.phase-name { font-weight: 600; font-size: 15px; }
+.phase-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+.phase-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-btn {
+  border: 1px solid var(--line-2); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: 13px;
+  display: inline-flex; align-items: center; gap: 6px; transition: all .15s ease;
+}
+.chip-btn .n { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.chip-btn:hover { border-color: var(--accent); color: var(--accent); }
+.chip-btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); flex-wrap: wrap; }
+.seg button { border: 0; background: none; padding: 7px 14px; border-radius: 999px; font-size: 13.5px; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--accent-btn); color: #fff; }
+.filter-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-row .note { font-size: 13px; color: var(--muted); }
+
+.explorer { display: grid; grid-template-columns: 300px 1fr; gap: 16px; margin-bottom: 30px; align-items: start; }
+.crit-nav { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; position: sticky; top: 12px; }
+.cn-item {
+  width: 100%; display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 10px; text-align: left;
+  padding: 10px 12px; border: 0; border-radius: 10px; background: none; font-size: 14px;
+}
+.cn-item:hover { background: var(--surface-2); }
+.cn-item[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+.cn-item .n { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.cn-item .avg { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.cn-item[aria-selected="true"] .avg, .cn-item[aria-selected="true"] .n { color: var(--accent); }
+.detail { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; min-width: 0; }
+.detail-top { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start; }
+.detail h2 { font-family: var(--serif); font-weight: 400; font-size: 40px; line-height: 1; margin: 8px 0 12px; }
+.detail .what { font-size: 16px; color: var(--ink-2); max-width: 620px; }
+.avg-box { text-align: right; min-width: 150px; }
+.avg-box b { display: block; font-family: var(--serif); font-weight: 400; font-size: 44px; line-height: 1; }
+.avg-box span { font-size: 12.5px; color: var(--muted); }
+.detail-cols { display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; margin-top: 26px; }
+.detail h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 400; margin-bottom: 12px; }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.checks li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; font-size: 14.5px; }
+.checks li::before { content: '✓'; color: var(--ok); font-weight: 600; }
+.checks li .vt { margin-left: 6px; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 99px; vertical-align: 1px; white-space: nowrap; }
+.misses { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.misses li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; font-size: 14.5px; color: var(--ink-2); }
+.misses li::before { content: '!'; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--warn); background: var(--warn-soft); margin-top: 2px; }
+.say { margin-top: 26px; padding: 18px 20px; border-radius: 12px; background: var(--accent-soft); border: 1px solid var(--accent-line); }
+.say p { font-family: var(--serif); font-size: 21px; line-height: 1.35; color: var(--ink); }
+.vbars { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); }
+.vbar { display: grid; grid-template-columns: 80px 1fr 44px; gap: 12px; align-items: center; font-size: 13px; padding: 4px 0; }
+.vbar .track { height: 10px; background: var(--surface-2); border-radius: 0 4px 4px 0; position: relative; }
+.vbar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 0 4px 4px 0; }
+.vbar.is-dim .fill { background: var(--bar-dim); }
+.vbar .v { font-weight: 600; text-align: right; }
+
+.scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 30px; }
+.scale-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.scale-item b { font-family: var(--serif); font-weight: 400; font-size: 34px; line-height: 1; }
+.scale-item .lbl { font-weight: 500; margin: 6px 0 4px; }
+.scale-item p { font-size: 13px; color: var(--ink-2); }
+.sec-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 6px 0 14px; }
+.sec-title h2 { font-size: 24px; }
+.sec-title p { font-size: 13.5px; color: var(--muted); }
+
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 30px; }
+.hbar { display: grid; grid-template-columns: 170px 1fr 48px; gap: 14px; align-items: center; padding: 5px 0; cursor: default; border-radius: 8px; }
+.hbar:hover { background: var(--surface-2); }
+.hbar .lbl { font-size: 13.5px; color: var(--ink-2); padding-left: 6px; }
+.hbar .track { position: relative; height: 14px; }
+.hbar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--bar); border-radius: 0 4px 4px 0; transition: width .5s ease; }
+.hbar.is-low .fill { background: var(--bar); }
+.hbar .v { font-size: 13.5px; font-weight: 600; text-align: right; padding-right: 6px; }
+.hbar .flag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--warn); margin-left: 6px; }
+.chart-axis { display: grid; grid-template-columns: 170px 1fr 48px; gap: 14px; margin-top: 6px; }
+.chart-axis .ticks { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.chart-foot { font-size: 12.5px; color: var(--muted); margin-top: 12px; }
+
+/* ============ Misc ============ */
+.loader { min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.loader .logo-mark { width: 52px; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; transform: scale(.96); } }
+.tip {
+  position: fixed; z-index: 50; pointer-events: none; padding: 8px 11px; border-radius: 9px; max-width: 260px;
+  background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.4; box-shadow: var(--shadow);
+}
+.toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-size: 14px; transition: all .25s ease; z-index: 60;
+}
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+.reveal { animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ============ Metrics filters ============ */
+.filters { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.seg-sm button { padding: 5px 12px; font-size: 12.5px; }
+.filter-row .note { text-align: right; line-height: 1.5; }
+.checks li .vt.rt { color: var(--warn); background: var(--warn-soft); }
+
+/* ============ My score: holistic card + call feed ============ */
+.top-card { padding: 28px; margin-bottom: 30px; }
+.top-card.is-cleared { border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); box-shadow: 0 0 0 4px var(--ok-soft), var(--shadow); }
+.tc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.tc-head h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(30px, 4vw, 42px); line-height: 1.05; margin-top: 8px; }
+.tc-stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 22px 0 6px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.tc-stats > div { padding: 14px 0; display: flex; flex-direction: column; gap: 2px; }
+.tc-stats > div + div { padding-left: 18px; border-left: 1px solid var(--line); }
+.tc-stats b { font-family: var(--serif); font-weight: 400; font-size: 34px; line-height: 1; }
+.tc-stats span { font-size: 12.5px; color: var(--muted); }
+.tc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 18px; align-items: start; }
+.tc-grid .trend { margin-top: 0; }
+.trend .pt.is-good { fill: var(--ok); }
+.trend .pt-v { fill: var(--ink); font-size: 11.5px; font-weight: 600; font-family: var(--sans); }
+.top-card h3 { font-size: 17px; margin-bottom: 10px; }
+.focus { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.focus-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.focus-list li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 14px; border-radius: 12px; background: var(--surface-2); font-size: 14px; line-height: 1.5; }
+.fnum { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--warn-soft); color: var(--warn); font-weight: 600; font-size: 13px; }
+.ftip { color: var(--ink-2); font-size: 13px; }
+.focus-list a { font-size: 13px; }
+.held { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+.held-sub { font-size: 13px; margin: -4px 0 8px; }
+.held-row { display: grid; grid-template-columns: minmax(180px, 1.2fr) 1.4fr auto auto; gap: 16px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.held-row:first-of-type { border-top: 0; }
+.held-name { font-weight: 500; display: flex; flex-direction: column; }
+.held-name small { font-weight: 400; font-size: 12px; color: var(--muted); }
+.held-path { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.held-path .arrow { color: var(--muted); font-size: 12px; }
+.sc { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-weight: 600; font-size: 13.5px; }
+.sc.lo { background: var(--warn-soft); color: var(--warn); }
+.sc.hi { background: var(--ok-soft); color: var(--ok); }
+.held-status { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+.held-status.ok { background: var(--ok-soft); color: var(--ok); }
+.held-status.warn { background: var(--warn-soft); color: var(--warn); }
+.held-link { font-size: 13px; white-space: nowrap; }
+
+.calls-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.calls-head h2 { font-size: 24px; }
+.calls-head p { font-size: 13.5px; }
+.seg .cnt { font-family: var(--mono); font-size: 10.5px; opacity: .7; margin-left: 2px; }
+.call-feed { position: relative; display: flex; flex-direction: column; gap: 16px; padding-left: 26px; }
+.call-feed::before { content: ''; position: absolute; left: 7px; top: 18px; bottom: 18px; width: 2px; background: var(--line); border-radius: 2px; }
+.call-card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; scroll-margin-top: 16px; }
+.call-card::before { content: ''; position: absolute; left: -25px; top: 34px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 3px solid var(--bar); }
+.call-card.flash { animation: flash 1.4s ease; }
+@keyframes flash { 0%, 40% { box-shadow: 0 0 0 4px var(--accent-soft); border-color: var(--accent); } }
+.cc-head { display: grid; grid-template-columns: 76px 1fr auto; gap: 18px; align-items: center; }
+.ring-sm { width: 76px; height: 76px; }
+.ring-sm .ring-label b { font-size: 24px; }
+.cc-title h3 { font-size: 18px; margin-top: 4px; }
+.cc-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.cc-meta a { font-size: 13px; }
+.cc-body { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.cc-body h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 400; margin-bottom: 10px; display: flex; align-items: center; }
+.cc-summary .summary-text { font-size: 15px; }
+.cc-summary .pass-line { margin-top: 10px; }
+.cc-sw { display: flex; flex-direction: column; gap: 20px; }
+.cc-details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+.cc-details summary { cursor: pointer; font-weight: 500; font-size: 15px; padding: 4px 0; list-style: none; display: flex; align-items: center; gap: 8px; }
+.cc-details summary::-webkit-details-marker { display: none; }
+.cc-details summary::before { content: '›'; display: inline-block; font-size: 18px; color: var(--muted); transition: transform .2s ease; }
+.cc-details[open] summary::before { transform: rotate(90deg); }
+.cc-details .breakdown { margin-top: 8px; }
+
+/* ============ HAWKEYE brand ============ */
+.hk-mark { width: 30px; height: 30px; display: block; border-radius: 9px; box-shadow: 0 4px 14px rgba(123, 92, 255, .28); }
+.hk-wm { letter-spacing: .2em; font-weight: 600; font-size: 16px; }
+.top-link { font-size: 13px; color: var(--ink-2); }
+.top-link:hover { color: var(--accent); }
+.loader .hk-mark { width: 52px; height: 52px; animation: pulse 1.4s ease-in-out infinite; }
+.no-scroll { overflow: hidden; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+
+/* ============ Landing: fixed night look ============ */
+html.on-landing body {
+  background:
+    radial-gradient(1100px 700px at 12% 8%, rgba(176, 123, 255, .26), transparent 60%),
+    radial-gradient(900px 620px at 92% 85%, rgba(255, 128, 196, .16), transparent 62%),
+    radial-gradient(700px 500px at 70% 10%, rgba(120, 200, 255, .08), transparent 60%),
+    #0A0714;
+}
+html.on-landing .theme-toggle, html.on-landing .who, html.on-landing .top-link { display: none !important; }
+html.on-landing .topbar, html.on-landing .foot { max-width: 1240px; }
+html.on-landing .brand-tag { color: #E3D4FF; background: rgba(176, 123, 255, .14); border-color: rgba(176, 123, 255, .35); }
+html.on-landing .foot { border-top-color: rgba(255, 255, 255, .08); color: rgba(235, 228, 255, .5); }
+.land {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 56px; align-items: center;
+  max-width: 1240px; margin: 0 auto; padding: 4px 28px 40px; min-height: calc(100vh - 170px);
+}
+.land-hero { position: relative; z-index: 1; }
+.land-eyebrow { display: flex; align-items: center; gap: 8px; color: rgba(235, 228, 255, .7); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: #5ED39E; box-shadow: 0 0 0 0 rgba(94, 211, 158, .6); animation: live 2s ease-out infinite; flex: none; }
+@keyframes live { 70% { box-shadow: 0 0 0 8px rgba(94, 211, 158, 0); } 100% { box-shadow: 0 0 0 0 rgba(94, 211, 158, 0); } }
+.hk-word {
+  font-family: var(--serif); font-weight: 400; font-size: clamp(64px, 9vw, 124px); line-height: .92; letter-spacing: .01em; margin: 14px 0 10px;
+  background: linear-gradient(100deg, #FFD6EE 0%, #D7B8FF 45%, #9C82FF 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hk-word .dot { color: #FF8CC8; -webkit-text-fill-color: #FF8CC8; }
+.target-rings { position: absolute; left: 230px; top: 112px; width: 0; height: 0; pointer-events: none; z-index: -1; }
+.target-rings i {
+  position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%;
+  border: 1.5px solid rgba(214, 184, 255, .5); opacity: 0; animation: ring 4.8s cubic-bezier(.2, .6, .3, 1) infinite;
+}
+.target-rings i:nth-child(2) { animation-delay: 1.2s; }
+.target-rings i:nth-child(3) { animation-delay: 2.4s; }
+.target-rings i:nth-child(4) { animation-delay: 3.6s; }
+@keyframes ring { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(5.2); opacity: 0; } }
+.land-tag { font-family: var(--serif); font-size: clamp(24px, 2.6vw, 32px); line-height: 1.2; color: #F2ECFF; }
+.land-tag em { color: #FFB3DB; }
+.land-sub { margin: 14px 0 24px; max-width: 470px; font-size: 15.5px; color: rgba(235, 228, 255, .72); }
+html.on-landing .signin {
+  max-width: 470px; padding: 22px 24px; background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .12);
+  backdrop-filter: blur(14px); box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+}
+html.on-landing .signin h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 6px 0 6px; }
+.inline-form { display: flex; gap: 8px; }
+.inline-form .input { flex: 1; min-width: 0; }
+.inline-form .btn { flex: none; }
+html.on-landing .input { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .16); }
+html.on-landing .btn-primary { background: linear-gradient(100deg, #8B5CFF, #C267E8); }
+html.on-landing .btn-primary:hover { filter: brightness(1.08); }
+
+.land-board {
+  position: relative; border-radius: 24px; padding: 24px; background: rgba(255, 255, 255, .045);
+  border: 1px solid rgba(255, 255, 255, .1); backdrop-filter: blur(18px); box-shadow: 0 30px 80px rgba(0, 0, 0, .35);
+  color: #F2ECFF; min-height: 420px;
+}
+.board-loading { min-height: 360px; display: grid; place-items: center; color: rgba(235, 228, 255, .6); }
+.board-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.board-head .eyebrow { color: rgba(235, 228, 255, .75); }
+.board-live { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #9FF0C9; }
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kpi { padding: 14px 16px; border-radius: 16px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .07); display: flex; flex-direction: column; gap: 2px; }
+.kpi-l { font-size: 12.5px; color: rgba(235, 228, 255, .7); }
+.kpi-v { font-family: var(--serif); font-weight: 400; font-size: 44px; line-height: 1.05; color: #fff; }
+.kpi-v small { font-size: 18px; color: rgba(235, 228, 255, .6); margin-left: 2px; }
+.kpi-cmp { font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: rgba(235, 228, 255, .55); }
+.kpi-cmp.up { color: #8EF0C1; }
+.kpi-cmp.down { color: #FFC08A; }
+.board-sec { margin-top: 18px; }
+.board-sub { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 8px; color: rgba(235, 228, 255, .85); }
+.board-sub .muted { color: rgba(235, 228, 255, .5); }
+.weeks { display: flex; gap: 6px; height: 74px; align-items: flex-end; }
+.wk { flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+.wk i { width: 100%; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, #A98BFF, #6F4FE0); opacity: .8; transition: opacity .15s ease; }
+.wk.is-now i { background: linear-gradient(180deg, #FFB3DB, #D46AB4); opacity: 1; }
+.wk:hover i { opacity: 1; }
+.pulse { display: flex; gap: 5px; height: 54px; align-items: flex-end; }
+.pb { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.pb i { width: 100%; border-radius: 4px 4px 0 0; background: rgba(214, 184, 255, .55); }
+.pb.is-tough i { background: #FFB46B; }
+.pb:hover i { filter: brightness(1.25); }
+.pulse-notes { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 12.5px; color: rgba(235, 228, 255, .8); }
+.pulse-notes span { display: inline-flex; align-items: center; gap: 6px; }
+.dot-warn, .dot-ok { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.dot-warn { background: #FFB46B; }
+.dot-ok { background: #8EF0C1; }
+.verts { display: flex; flex-direction: column; gap: 2px; }
+.vrow { display: grid; grid-template-columns: 70px 1fr 1fr 1.4fr; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255, 255, 255, .07); font-size: 13px; color: rgba(235, 228, 255, .78); }
+.vrow b { color: #fff; font-weight: 500; }
+.board-foot { margin-top: 14px; font-size: 12px; color: rgba(235, 228, 255, .5); }
+
+/* ============ Scorecard extras ============ */
+.cand-hint { margin-bottom: 14px; padding: 12px 16px; border-radius: 12px; font-size: 14px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); }
+.done-mail { margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+
+/* ============ HAWKEYE's take ============ */
+.take { margin-bottom: 14px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg, var(--accent-soft), transparent 80%); border: 1px solid var(--accent-line); }
+.take h4 { color: var(--accent) !important; }
+.take .spark { color: #E866B8; margin-right: 6px; font-size: 13px; }
+.take-head { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
+.take-next { margin-top: 8px; font-size: 14px; color: var(--ink-2); }
+.take.is-loading p { animation: pulse 1.6s ease-in-out infinite; }
+
+/* ============ Overlays ============ */
+.overlay { position: fixed; inset: 0; z-index: 60; background: rgba(10, 8, 20, .45); display: flex; justify-content: flex-end; }
+.overlay-center { align-items: center; justify-content: center; padding: 24px; }
+.modal { width: min(760px, 100%); max-height: 92vh; background: var(--surface); border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
+.drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.drawer-head h2 { font-size: 19px; margin-top: 4px; }
+.mail-to { font-size: 12.5px; margin-top: 4px; }
+.mail-frame { flex: 1; width: 100%; min-height: 62vh; border: 0; background: #F4F1FA; }
+
+/* ============ Ask HAWKEYE ============ */
+.coach-fab {
+  position: fixed; right: 22px; bottom: 22px; z-index: 40; display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 18px; border: 0; border-radius: 999px; color: #fff; font-weight: 600; font-size: 14.5px;
+  background: linear-gradient(100deg, #7B5CFF, #D46AB4); box-shadow: 0 10px 30px rgba(123, 92, 255, .4);
+  transition: transform .15s ease;
+}
+.coach-fab:hover { transform: translateY(-2px); }
+.coach-fab svg { width: 18px; height: 18px; }
+.coach { width: min(440px, 100%); height: 100%; background: var(--surface); border-left: 1px solid var(--line); display: flex; flex-direction: column; animation: slidein .25s ease; }
+@keyframes slidein { from { transform: translateX(30px); opacity: 0; } }
+.coach-head { display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 20px 12px; }
+.coach-head h2 { font-family: var(--serif); font-weight: 400; font-size: 30px; }
+.coach-log { flex: 1; overflow-y: auto; padding: 4px 20px 8px; }
+.msg { max-width: 90%; padding: 10px 14px; border-radius: 16px; margin: 8px 0; font-size: 14.5px; line-height: 1.55; }
+.msg p { margin: 0 0 6px; }
+.msg p:last-child { margin-bottom: 0; }
+.msg ul { margin: 4px 0 6px; padding-left: 18px; }
+.msg.bot { background: var(--surface-2); border-bottom-left-radius: 4px; }
+.msg.me { margin-left: auto; background: var(--accent-soft); color: var(--ink); border-bottom-right-radius: 4px; }
+.msg.is-typing { display: inline-flex; gap: 4px; }
+.msg.is-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+.msg.is-typing span:nth-child(2) { animation-delay: .2s; }
+.msg.is-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 50% { opacity: .25; } }
+.coach-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 10px; }
+.coach-chips .chip-btn { text-align: left; }
+.coach-form { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid var(--line); }
+.coach-form textarea { flex: 1; min-height: 46px; resize: none; }
+.coach-note { padding: 0 20px 16px; font-size: 11.5px; color: var(--muted); }
+
+/* ============ Settings ============ */
+.set-sec { margin-bottom: 34px; }
+.set-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.set-head h2 { font-size: 22px; margin-bottom: 4px; }
+.set-head p { font-size: 13.5px; max-width: 640px; }
+.mail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.mail-card { padding: 18px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); transition: opacity .2s ease; }
+.mail-card.is-off { opacity: .55; }
+.mail-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.mail-top h3 { font-size: 17px; }
+.mail-top p { font-size: 12.5px; margin-top: 2px; }
+.mail-cc { margin: 14px 0 6px; }
+.mail-cc .pills { gap: 6px; }
+.mail-cc .pill span { padding: 6px 11px; font-size: 12.5px; }
+.mail-words { margin-top: 8px; font-size: 13.5px; }
+.mail-words summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+.mail-actions { display: flex; gap: 14px; align-items: center; margin-top: 12px; }
+.set-field { display: block; margin: 12px 0 0; }
+.set-field .help { display: block; font-size: 12px; color: var(--muted); margin: -2px 0 6px; }
+.set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; padding-top: 12px; }
+.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13.5px; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.sw-track { position: relative; width: 40px; height: 22px; border-radius: 99px; background: var(--line-2); transition: background .2s ease; flex: none; }
+.sw-track i { position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .2s ease; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.switch input:checked + .sw-track { background: var(--accent-btn); }
+.switch input:checked + .sw-track i { left: 21px; }
+.switch input:focus-visible + .sw-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch input:disabled + .sw-track { opacity: .6; cursor: default; }
+.people { display: flex; flex-direction: column; }
+.person { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.person:first-child { border-top: 0; }
+.p-who { display: flex; flex-direction: column; min-width: 0; }
+.p-who small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.p-act { font-size: 12.5px; }
+.tier { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; }
+.tier.t1 { background: var(--accent-soft); color: var(--accent); }
+.tier.t2 { background: var(--ok-soft); color: var(--ok); }
+.tier.t0 { background: var(--warn-soft); color: var(--warn); }
+.add-admin { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.add-admin .input { flex: 1; min-width: 180px; }
+.log-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 13px; }
+.log-row:first-child { border-top: 0; }
+.log-kind { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 99px; background: var(--surface-2); color: var(--ink-2); }
+.log-sub { display: flex; flex-direction: column; min-width: 0; }
+.log-sub small { color: var(--muted); overflow-wrap: anywhere; }
+.log-at { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.log-at.bad { color: var(--danger); white-space: normal; }
+.save-bar {
+  position: sticky; bottom: 16px; z-index: 20; display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  margin-top: 10px; padding: 10px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--accent-line); box-shadow: var(--shadow);
+}
+.save-bar span { margin-right: auto; font-size: 13.5px; }
+
+/* ============ Responsive ============ */
+@media (max-width: 1023px) {
+  .land { grid-template-columns: 1fr; gap: 28px; min-height: 0; padding-top: 12px; }
+  .land-board { min-height: 0; }
+}
+@media (max-width: 960px) {
+  .mail-grid { grid-template-columns: 1fr; }
+  .set-grid { grid-template-columns: 1fr; }
+  .tc-grid, .cc-body { grid-template-columns: 1fr; }
+  .focus-list { grid-template-columns: 1fr; }
+  .held-row { grid-template-columns: 1fr auto; }
+  .held-path { grid-column: 1 / -1; grid-row: 2; }
+  .held-link { grid-column: 1 / -1; }
+  .filter-row .note { text-align: left; }
+  .options { grid-template-columns: 1fr; }
+  .option { min-height: 0; }
+  .res-grid, .two, .explorer, .detail-cols { grid-template-columns: 1fr; }
+  .crit-nav { position: static; display: flex; overflow-x: auto; gap: 4px; }
+  .cn-item { width: auto; flex: none; grid-template-columns: auto auto auto; }
+  .flow { grid-template-columns: 1fr 1fr; }
+  .phase::after { display: none; }
+  .facts { grid-template-columns: 1fr 1fr; }
+  .scale { grid-template-columns: 1fr 1fr; }
+  .bd-row { grid-template-columns: 1fr auto; }
+  .bd-fb { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .land { padding-left: 16px; padding-right: 16px; }
+  .target-rings { left: 90px; top: 100px; }
+  .land-board { padding: 18px; }
+  .kpi-v { font-size: 34px; }
+  .vrow { grid-template-columns: 60px 1fr 1fr; }
+  .vrow span:last-child { grid-column: 2 / -1; }
+  .inline-form { flex-direction: column; }
+  .brand-tag { display: none; }
+  .coach-fab { right: 14px; bottom: 14px; }
+  .person { grid-template-columns: 34px 1fr auto; }
+  .person .tier { grid-column: 2; justify-self: start; }
+  .wrap, .topbar, .foot { padding-left: 16px; padding-right: 16px; }
+  .who-email, .who .avatar { display: none; }
+  .topbar { gap: 10px; }
+  .topbar-right { gap: 10px; }
+  .home-facts { grid-template-columns: 1fr 1fr; }
+  .fields { grid-template-columns: 1fr; padding: 18px; }
+  .crit { grid-template-columns: 1fr; padding: 18px; }
+  .rate span { min-width: 52px; }
+  .rate span small { display: none; }
+  .hbar, .chart-axis { grid-template-columns: 110px 1fr 40px; gap: 8px; }
+  .scale { grid-template-columns: 1fr; }
+  .flow { grid-template-columns: 1fr; }
+  .detail { padding: 20px; }
+  .detail-top { grid-template-columns: 1fr; }
+  .avg-box { text-align: left; }
+  .signin { padding: 22px; }
+  .vbar { grid-template-columns: 64px 1fr 40px; }
+  .top-card { padding: 20px; }
+  .tc-stats { grid-template-columns: 1fr 1fr; }
+  .tc-stats > div:nth-child(3) { padding-left: 0; border-left: 0; }
+  .call-feed { padding-left: 0; }
+  .call-feed::before, .call-card::before { display: none; }
+  .call-card { padding: 18px; }
+  .cc-head { grid-template-columns: 60px 1fr; }
+  .ring-sm { width: 60px; height: 60px; }
+  .ring-sm .ring-label b { font-size: 19px; }
+  .cc-head .verdict { grid-column: 1 / -1; justify-self: start; }
+  .seg { border-radius: 18px; }
+}
+</style>
+
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="#/" target="_self" aria-label="HAWKEYE home">
+    <svg class="hk-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><defs><linearGradient id="hk-bg" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC3E4"/><stop offset=".5" stop-color="#B07BFF"/><stop offset="1" stop-color="#7B5CFF"/></linearGradient><radialGradient id="hk-sheen" cx=".74" cy=".16" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="64" height="64" rx="16" fill="url(#hk-bg)"/><rect width="64" height="64" rx="16" fill="url(#hk-sheen)"/><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 37v-4a16 16 0 0 1 32 0v4"/><path d="M16 37h6v11h-3.5A2.5 2.5 0 0 1 16 45.5z" fill="#fff"/><path d="M48 37h-6v11h3.5a2.5 2.5 0 0 0 2.5-2.5z" fill="#fff"/><path d="M45 48c0 3-3.6 4.5-9 4.5"/></g><circle cx="34.5" cy="52.5" r="2.6" fill="#fff"/><path d="M50 7.5l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" fill="#fff"/></svg>
+<span class="wordmark hk-wm">HAWKEYE</span><span class="brand-tag">Mock calls · Kestrel</span>
+  </a>
+  <div class="topbar-right">
+    <a class="top-link" id="nav-settings" href="#/settings" target="_self" hidden>Settings</a>
+    <div class="who" id="who" hidden>
+      <span class="avatar" data-fill="initial"></span>
+      <span class="who-email" data-fill="email"></span>
+      <button class="link-btn" type="button" data-signout>Sign out</button>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Colour theme">
+      <button type="button" data-theme-set="light" aria-label="Light mode" title="Light mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button type="button" data-theme-set="dark" aria-label="Dark mode" title="Dark mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ Landing (signed out) ============ -->
+<section class="view" id="view-landing" hidden>
+  <div class="land">
+    <div class="land-hero">
+      <div class="target-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <p class="eyebrow land-eyebrow"><span class="live-dot"></span>Kestrel · Mock call portal</p>
+      <h1 class="hk-word">HAWKEYE<span class="dot">.</span></h1>
+      <p class="land-tag">Hit the mark, <em>before the floor does.</em></p>
+      <p class="land-sub">Score mock calls, get every round’s feedback with an AI coach on hand, and see exactly what a 5 sounds like.</p>
+
+      <div class="card signin" id="signin">
+        <div data-step="email">
+          <p class="eyebrow" id="signin-eyebrow">Sign in</p>
+          <h2 id="signin-title">Take your shot.</h2>
+          <p class="lead" id="signin-lead">Use your Kestrel work email. We’ll send a one-time code to your inbox.</p>
+          <form id="email-form" novalidate>
+            <label class="field-label" for="email">Work email</label>
+            <div class="inline-form">
+              <input class="input" id="email" type="email" autocomplete="email" placeholder="you@kestrel.example" required>
+              <button class="btn btn-primary" type="submit">Send code <span aria-hidden="true">→</span></button>
+            </div>
+            <p class="form-msg" role="alert"></p>
+          </form>
+        </div>
+        <div data-step="otp" hidden>
+          <p class="eyebrow">Check your inbox</p>
+          <h2>Enter your code</h2>
+          <p class="lead">We sent a 6-digit code to <b id="otp-email"></b>. It expires in 10 minutes.</p>
+          <form id="otp-form" novalidate>
+            <label class="field-label" for="otp">One-time code</label>
+            <div class="inline-form">
+              <input class="input otp-input" id="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" required>
+              <button class="btn btn-primary" type="submit">Verify <span aria-hidden="true">→</span></button>
+            </div>
+            <p class="form-msg" role="alert"></p>
+          </form>
+          <div class="otp-actions">
+            <button class="link-btn" type="button" id="resend">Resend code</button>
+            <button class="link-btn" type="button" id="change-email">Use a different email</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="land-board" id="land-board" aria-live="polite">
+      <div class="board-loading"><span class="mono">Tuning in…</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Home (signed in) ============ -->
+<section class="view" id="view-home" hidden>
+  <div class="wrap home">
+    <div class="home-hero">
+      <p class="eyebrow">HAWKEYE · Mock call portal</p>
+      <h1 class="display">Hi <span data-fill="firstName"></span><span class="dot">.</span></h1>
+      <p class="hero-sub">What are we doing today?</p>
+    </div>
+
+    <div class="options">
+      <a class="option" href="#/score" target="_self">
+        <span class="opt-num">01</span>
+        <span class="opt-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 3.5h6v2.5H9zM8.5 11l2 2 4-4M8.5 16.5h7"/></svg>
+        </span>
+        <span class="opt-title">I am scoring</span>
+        <span class="opt-sub">For trainers and managers. Fill in the scorecard for a Round 1 or Round 2 mock call.</span>
+        <span class="opt-go">Start a scorecard <span aria-hidden="true">→</span></span>
+      </a>
+      <a class="option" href="#/mine" target="_self">
+        <span class="opt-num">02</span>
+        <span class="opt-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5H12z"/></svg>
+        </span>
+        <span class="opt-title">I want to see my score</span>
+        <span class="opt-sub">For trainees. Every round’s score, verdict and feedback, a holistic summary, and an AI coach to ask.</span>
+        <span class="opt-go">See my scorecard <span aria-hidden="true">→</span></span>
+      </a>
+      <a class="option" href="#/metrics" target="_self">
+        <span class="opt-num">03</span>
+        <span class="opt-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5h16M7 16V10M12 16V5M17 16v-4"/></svg>
+        </span>
+        <span class="opt-title">Mock call evaluation metrics</span>
+        <span class="opt-sub">The 12 criteria explained: what each one checks, what a 5 sounds like, and live averages from every scored call.</span>
+        <span class="opt-go">Explore the metrics <span aria-hidden="true">→</span></span>
+      </a>
+    </div>
+
+    <div class="home-facts">
+      <div><b>12</b><span>criteria, each rated 1–5</span></div>
+      <div><b>3.5</b><span>pass mark · Pre-sales (Qualifier)</span></div>
+      <div><b>4.0</b><span>pass mark · Sales (Advisor)</span></div>
+      <div><b>2</b><span>rounds: trainer, then vertical team</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Scoring ============ -->
+<section class="view" id="view-score" hidden>
+  <div class="wrap">
+    <a class="back" href="#/" target="_self">← Home</a>
+    <header class="page-head">
+      <p class="eyebrow">01 · I am scoring</p>
+      <h1>Mock call scorecard</h1>
+      <p class="lede">Rate each criterion from 1 to 5 and say why. The trainee reads every word of this, and it’s emailed to them as soon as you submit, so make the feedback specific. You’re submitting as <b data-fill="email"></b>.</p>
+    </header>
+    <div class="score-bar" id="score-bar">
+      <div class="sb-progress"><span id="sb-count">0 of 12 rated</span><div class="bar"><i id="sb-fill"></i></div></div>
+      <div class="sb-score"><span class="muted">Running score</span> <b id="sb-avg">–</b><span class="muted">/ 5</span> <span class="sb-pass" id="sb-pass"></span></div>
+    </div>
+    <form id="score-form" novalidate>
+      <div class="form-sec">
+        <div class="form-sec-head"><span class="eyebrow">Part 1</span><h2>Call details</h2></div>
+        <div class="cand-hint" id="cand-hint" hidden></div>
+        <div class="fields" id="fields-details"></div>
+      </div>
+      <div class="form-sec">
+        <div class="form-sec-head"><span class="eyebrow">Part 2</span><h2>Scorecard</h2>
+          <p class="muted">1 Missing · 2 Weak · 3 Average · 4 Good · 5 Excellent. Not sure what a criterion covers? <a href="#/metrics" target="_blank" rel="noopener">Open the metrics ↗</a></p>
+        </div>
+        <div class="crit-list" id="crit-list"></div>
+      </div>
+      <div class="form-sec">
+        <div class="form-sec-head"><span class="eyebrow">Part 3</span><h2>Wrap-up</h2></div>
+        <div class="verdict-hint" id="verdict-hint" hidden></div>
+        <div class="fields" id="fields-close"></div>
+      </div>
+      <p class="form-msg" id="score-msg" role="alert"></p>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit" id="score-submit">Submit scorecard <span aria-hidden="true">→</span></button>
+        <button class="link-btn" type="button" id="score-clear">Clear the form</button>
+      </div>
+      <p class="fine">Your answers are saved on this device as you type, so a refresh won’t lose them.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ============ Scored ============ -->
+<section class="view" id="view-scored" hidden>
+  <div class="wrap narrow">
+    <div class="card done-card">
+      <div class="done-tick" aria-hidden="true">✓</div>
+      <p class="eyebrow">Scorecard submitted</p>
+      <h2 id="done-title">Saved.</h2>
+      <p class="lead" id="done-lead"></p>
+      <p class="done-mail" id="done-mail"></p>
+      <div class="done-actions">
+        <a class="btn btn-primary" href="#/score" target="_self" id="score-another">Score another call <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="#/" target="_self">Home</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ My score ============ -->
+<section class="view" id="view-mine" hidden>
+  <div class="wrap">
+    <a class="back" href="#/" target="_self">← Home</a>
+    <div id="mine-body"></div>
+  </div>
+</section>
+
+<!-- ============ Metrics ============ -->
+<section class="view" id="view-metrics" hidden>
+  <div class="wrap">
+    <a class="back" href="#/" target="_self">← Home</a>
+    <div id="metrics-body"></div>
+  </div>
+</section>
+
+<!-- ============ Settings (admins) ============ -->
+<section class="view" id="view-settings" hidden>
+  <div class="wrap">
+    <a class="back" href="#/" target="_self">← Home</a>
+    <div id="settings-body"></div>
+  </div>
+</section>
+
+<section class="view" id="view-loading" hidden>
+  <div class="loader"><svg class="hk-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><defs><linearGradient id="hk-bg" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC3E4"/><stop offset=".5" stop-color="#B07BFF"/><stop offset="1" stop-color="#7B5CFF"/></linearGradient><radialGradient id="hk-sheen" cx=".74" cy=".16" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="64" height="64" rx="16" fill="url(#hk-bg)"/><rect width="64" height="64" rx="16" fill="url(#hk-sheen)"/><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 37v-4a16 16 0 0 1 32 0v4"/><path d="M16 37h6v11h-3.5A2.5 2.5 0 0 1 16 45.5z" fill="#fff"/><path d="M48 37h-6v11h3.5a2.5 2.5 0 0 0 2.5-2.5z" fill="#fff"/><path d="M45 48c0 3-3.6 4.5-9 4.5"/></g><circle cx="34.5" cy="52.5" r="2.6" fill="#fff"/><path d="M50 7.5l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6z" fill="#fff"/></svg>
+<span class="mono muted">Loading</span></div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <span>© Kestrel · HAWKEYE, the mock call portal</span>
+  <span>Questions about a scorecard? Ask your trainer in #new-joiners.</span>
+</footer>
+
+<!-- ============ Ask HAWKEYE (AI coach) ============ -->
+<button class="coach-fab" id="coach-fab" type="button" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.9z" fill="currentColor"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="currentColor"/></svg>
+  Ask HAWKEYE
+</button>
+<div class="overlay" id="coach-overlay" hidden>
+  <aside class="coach" role="dialog" aria-modal="true" aria-labelledby="coach-title">
+    <header class="coach-head">
+      <div><p class="eyebrow">AI coach</p><h2 id="coach-title">Ask HAWKEYE</h2></div>
+      <button class="icon-btn" type="button" data-close-coach aria-label="Close">✕</button>
+    </header>
+    <div class="coach-log" id="coach-log" aria-live="polite"></div>
+    <div class="coach-chips" id="coach-chips"></div>
+    <form class="coach-form" id="coach-form">
+      <textarea class="input" id="coach-q" rows="2" maxlength="2000" placeholder="Ask about your calls…"></textarea>
+      <button class="btn btn-primary" type="submit" id="coach-send">Send</button>
+    </form>
+    <p class="coach-note">HAWKEYE answers from your own scorecards using an AI model (Llama, on Cloudflare). It can get things wrong, so check anything important with your trainer. <span id="coach-left"></span></p>
+  </aside>
+</div>
+
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* HAWKEYE demo: the evaluation guide for Kestrel Academy, a made-up company. All numbers are invented. */
+(function () {
+  // avg[vertical][role] around a base score; null where a criterion isn't scored.
+  function A(b, opt) {
+    opt = opt || {};
+    var r = function (x) { return Math.round(x * 100) / 100; };
+    var cell = function (d, pre) { return { all: r(b + d), presales: r(b + d - 0.12), sales: opt.presales ? null : r(b + d + 0.08) }; };
+    var o = { all: cell(0), SWE: cell(-0.12), PM: cell(0.06), Data: cell(-0.04) };
+    if (opt.noData) o.Data = { all: null, presales: null, sales: null };
+    return o;
+  }
+  window.MOCK_GUIDE = {
+    snapshot: { calls: 160, from: 'Jun 2026', to: 'Nov 2026', counts: { all: { all: 160, presales: 68, sales: 92 }, SWE: { all: 52, presales: 24, sales: 28 }, PM: { all: 71, presales: 30, sales: 41 }, Data: { all: 37, presales: 14, sales: 23 } } },
+    verticals: ['SWE', 'PM', 'Data'],
+    phases: [
+      { key: 'open', label: 'Open', sub: 'Earn the next 20 minutes', items: ['intro', 'context'] },
+      { key: 'discover', label: 'Discover', sub: 'Understand the person', items: ['profiling', 'mtnut'] },
+      { key: 'pitch', label: 'Pitch', sub: 'Connect their gaps to the program', items: ['mapping', 'community', 'program', 'placement', 'usps'] },
+      { key: 'close', label: 'Close', sub: 'Move them to a decision', items: ['rebuttal', 'urgency', 'schedule'] }
+    ],
+    scale: [
+      { n: 5, label: 'Excellent', text: 'Covered every point naturally and tailored it to this prospect.' },
+      { n: 4, label: 'Good', text: 'Covered most points, with one or two small misses.' },
+      { n: 3, label: 'Average', text: 'Partly covered. Noticeable gaps or felt scripted.' },
+      { n: 2, label: 'Weak', text: 'Touched on it briefly, or only when the prospect asked.' },
+      { n: 1, label: 'Missing', text: 'Not done, or done in a way that hurt the call.' }
+    ],
+    criteria: {
+      intro: { name: 'Introduction', what: 'The first 30 seconds: greet them, say who you are, and check it’s a good time.', avg: A(4.6),
+        good: [{ t: 'Greet the prospect by name' }, { t: 'Say who you are and where you’re calling from, in one line' }, { t: 'Check it’s a good time to talk' }, { t: 'Calm, unhurried energy' }],
+        misses: ['Skipping the greeting', 'Diving in without checking they’re free', 'Rushing the opening'],
+        say: 'Hi Sam, this is Maya from Kestrel Academy. Is now a good time for about 15 minutes?' },
+      context: { name: 'Context set-up', what: 'Why you’re calling and what the call will cover, so they know what’s in it for them.', avg: A(4.4),
+        good: [{ t: 'Where and when they enquired' }, { t: 'A one-line intro to Kestrel' }, { t: 'A clear agenda for the call' }, { t: 'For Data: mention the live projects up front', v: 'Data' }],
+        misses: ['A rambling company intro', 'No agenda'],
+        say: 'You asked about our PM program last week. I’d love to hear about your goals first, then show you how the program maps to them.' },
+      profiling: { name: 'Profiling', what: 'Questions that tell you who this person is: background, day-to-day, tools and goals.', avg: A(4.05),
+        good: [{ t: 'Education and work background' }, { t: 'What their day looks like now' }, { t: 'Why this, why now' }, { t: 'A conversation, not a questionnaire' }, { t: 'Their stack, and how they rate themselves on it', v: 'SWE' }],
+        misses: ['Firing questions without reacting to answers', 'Missing the “why now”'],
+        say: 'Walk me through a normal week in your current role. Which parts do you enjoy most?' },
+      mtnut: { name: 'Fit check', what: 'BANT: Budget, Authority, Need, Timing. Is this the right program for them, right now?', avg: A(3.45),
+        good: [{ t: 'Budget, raised naturally while you talk outcomes' }, { t: 'Who else is part of the decision' }, { t: 'The real need behind the enquiry' }, { t: 'When they want to make the move' }],
+        misses: ['Only checking the need', 'Asking about budget as the first question'],
+        say: 'If this goes well, when would you want to be in the new role? And is anyone else part of this decision?' },
+      mapping: { name: 'Profile mapping', what: 'Connect what they told you to exactly what the program changes for them.', avg: A(3.7),
+        good: [{ t: 'Their gaps, mapped to specific modules' }, { t: 'The target role, mapped to the projects' }, { t: 'Done early, so it hooks them' }],
+        misses: ['A generic pitch that could be for anyone', 'Mapping only when the prospect asks'],
+        say: 'You said stakeholder updates eat your week. Module 3 is exactly that: writing one-page updates people actually read.' },
+      community: { name: 'Kestrel and community', what: 'The peers, events and network that make the program more than content.', avg: A(3.8),
+        good: [{ t: 'Cohorts of 40, on purpose' }, { t: 'Peer reviews on every project' }, { t: 'Meetups and alumni events, with a real example' }],
+        misses: ['Listing features with no benefit', 'Skipping the community entirely'],
+        say: 'Your cohort reviews every project you ship, so you get forty sets of eyes, not one.' },
+      program: { name: 'Program details', what: 'Structure, schedule, curriculum and projects, tailored to this prospect.', avg: A(4.0),
+        good: [{ t: 'Length and weekly time needed' }, { t: 'Modules, in plain words' }, { t: 'The projects they’ll ship' }, { t: 'Who the mentors are' }],
+        misses: ['Reading the brochure aloud', 'Not checking the schedule fits their week'],
+        say: 'It’s six months, about eight hours a week: two live evenings and a weekend lab.' },
+      placement: { name: 'Career support', what: 'How we support the job search, honestly. Data doesn’t offer career services, so it isn’t scored on Data calls.', avg: A(3.75, { noData: true }),
+        good: [{ t: 'Who is eligible for career support' }, { t: 'Portfolio and interview prep' }, { t: 'Hiring partners, with real numbers' }],
+        misses: ['Promising a job', 'Vague “we help you get placed”'],
+        say: 'We don’t promise a job. We do get your portfolio ready, run mock interviews and refer you to partners who are hiring.' },
+      rebuttal: { name: 'Objection handling', what: 'Hear the objection fully, explore it, then answer with facts.', avg: A(3.55),
+        good: [{ t: 'Let them finish' }, { t: 'Ask one question to understand it' }, { t: 'Answer with a fact, not pressure' }, { t: 'Check the answer landed' }],
+        misses: ['Answering before understanding', 'Getting defensive'],
+        say: 'That makes sense. When you say it’s a lot of time, is it the weekday evenings or the weekends that worry you?' },
+      usps: { name: 'What sets us apart', what: 'The two or three things that make Kestrel the right choice for this person, each with a benefit.', avg: A(3.65),
+        good: [{ t: 'Pick what matters to them, not everything' }, { t: 'Feature → Advantage → Benefit, every time' }],
+        misses: ['A long list with no benefit', 'Comparing by attacking competitors'],
+        say: 'Small cohorts mean your mentor knows your project by name, so feedback is about your work, not a template.' },
+      urgency: { name: 'Urgency', what: 'A real, personal reason to act now: their trigger, plus actual dates.', avg: A(3.25),
+        good: [{ t: 'Actual cohort dates and seat limits' }, { t: 'Their own trigger: appraisal, hiring season, a deadline' }, { t: 'Fees and payment plans, clearly', r: 'sales' }, { t: 'Urgency that leads to the booked call', r: 'presales' }],
+        misses: ['No urgency at all', 'Made-up scarcity'],
+        say: 'The next cohort starts on the 3rd. Starting then means you finish before your review in May, with two projects to show.' },
+      schedule: { name: 'Call schedule', what: 'Pre-sales only. Hand them to an advisor with a booked slot, an agenda and a reason to show up.', presales: true, avg: A(3.8, { presales: true }),
+        good: [{ t: 'A natural transition, with a reason for the next call' }, { t: 'Two specific times to choose from' }, { t: 'Ask for their profile so the advisor can prepare' }],
+        misses: ['No slot booked', 'No agenda for the next call'],
+        say: 'I’d like you to speak with Priya, one of our senior advisors. Does tomorrow at 6 or Thursday at 7 work better?' }
+    }
+  };
+})();
+</script>
+
+<script>
+/*
+ * HAWKEYE (mock call portal) client. Signed out, every route shows the landing page (live numbers +
+ * sign-in). Signed in: #/ home, #/score scorecard, #/mine my scores (+ Ask HAWKEYE), #/metrics[/criterion]
+ * evaluation metrics, #/settings (admins). Talks to Apps Script doPost (window.MOCK_API),
+ * or to the local preview mock (window.MOCK_PREVIEW_API).
+ */
+(function () {
+  'use strict';
+
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+  var GUIDE = window.MOCK_GUIDE;
+  var API_URL = window.MOCK_API || '';
+  var TOKEN_KEY = 'mcp-token';
+  var ROLE_NAME = { presales: 'Pre-sales (Qualifier)', sales: 'Sales (Advisor)' };
+
+  var state = { token: null, user: null, calls: null, round: 'all', next: null, vertical: 'all', role: 'all', metricsBuilt: false, crit: 'intro' };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function store(key, val) {
+    try {
+      if (val === undefined) return localStorage.getItem(key);
+      if (val === null) localStorage.removeItem(key); else localStorage.setItem(key, val);
+    } catch (e) { return null; }
+  }
+  function fmt1(n) { return n == null ? '–' : (Math.round(n * 10) / 10).toFixed(1); }
+  function fmt2(n) { return n == null ? '–' : String(Math.round(n * 100) / 100); }
+  function fmtDate(s) {
+    var d = new Date(s);
+    if (isNaN(d)) return String(s || '');
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function listText(arr) {
+    if (arr.length < 2) return arr.join('');
+    return arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+  }
+
+  /* ================= API ================= */
+  function post(fn, args) {
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // simple request: no CORS preflight
+      body: JSON.stringify({ action: fn, args: args }),
+      redirect: 'follow', credentials: 'omit', cache: 'no-store'
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        try { return JSON.parse(t); } catch (e) {
+          console.error('Mock call Portal: non-JSON reply', { status: r.status, body: t.slice(0, 2000) });
+          var err = new Error('The server sent an unexpected reply (' + r.status + '). Please try again in a minute. If it keeps happening, message the training team.');
+          err.html = true;
+          throw err;
+        }
+      });
+    }, function () {
+      throw new Error('Couldn’t reach the server. Check your connection and try again.');
+    });
+  }
+
+  function api(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    var call = window.MOCK_PREVIEW_API
+      ? new Promise(function (r) { setTimeout(function () { r(window.MOCK_PREVIEW_API[fn].apply(null, args)); }, 300); })
+      : post(fn, args).catch(function (err) {
+        if (!err.html) throw err;
+        // Retry once. A repeated send-code hits the resend cooldown; a repeated submit is de-duplicated server-side.
+        return new Promise(function (r) { setTimeout(r, 1200); }).then(function () { return post(fn, args); })
+          .then(function (res) {
+            if (fn === 'apiMockRequestOtp' && res && !res.ok && /just sent/i.test(res.error || '')) {
+              return { ok: true, email: String(args[0] || '').trim().toLowerCase(), resendIn: 60 };
+            }
+            return res;
+          });
+      });
+    return call.then(function (res) {
+      if (res && res.ok) return res;
+      var err = new Error((res && res.error) || 'Something went wrong.');
+      err.code = res && res.code;
+      throw err;
+    });
+  }
+
+  // The AI coach runs in HAWKEYE's own Worker (Workers AI), on this site under /api/.
+  // The preview fakes it with MOCK_PREVIEW_API.apiMockCoach / apiMockSummary.
+  function coachApi(path, body) {
+    var call = window.MOCK_PREVIEW_API
+      ? new Promise(function (r) {
+          setTimeout(function () {
+            r(path === 'coach' ? window.MOCK_PREVIEW_API.apiMockCoach(body.token, body.messages) : window.MOCK_PREVIEW_API.apiMockSummary(body.token, body.id));
+          }, 500);
+        })
+      : fetch('/api/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'omit', cache: 'no-store' })
+          .then(function (r) { return r.json(); }, function () { throw new Error('Couldn’t reach HAWKEYE’s coach. Check your connection and try again.'); });
+    return call.then(function (res) {
+      if (res && res.ok) return res;
+      var err = new Error((res && res.error) || 'Something went wrong.');
+      err.code = res && res.code;
+      throw err;
+    });
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('is-on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('is-on'); }, 2600);
+  }
+  function busy(btn, on) { if (btn) { btn.classList.toggle('is-busy', !!on); btn.disabled = !!on; } }
+  function show(id) {
+    $$('.view').forEach(function (v) { v.hidden = v.id !== id; });
+    $('#coach-fab').hidden = !(id === 'view-mine' && state.user && state.user.coach);
+    if (id !== 'view-mine' && $('#coach-overlay')) $('#coach-overlay').hidden = true;
+    window.scrollTo(0, 0);
+  }
+
+  /* ================= Tooltip ================= */
+  var tip = $('#tip');
+  function showTip(html, x, y) {
+    tip.innerHTML = html;
+    tip.hidden = false;
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    var left = Math.min(Math.max(8, x + 14), window.innerWidth - w - 8);
+    var top = y - h - 12 < 8 ? y + 16 : y - h - 12;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hideTip() { tip.hidden = true; }
+
+  /* ================= Theme ================= */
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    $$('[data-theme-set]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-theme-set') === t)); });
+  }
+  applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+  $$('[data-theme-set]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-theme-set');
+      applyTheme(t);
+      store('origin-theme', t);
+    });
+  });
+
+  /* ================= Session ================= */
+  // Signed out, the page wears the landing page's fixed night look; signed in, the person's own theme.
+  function setLandingLook(on) {
+    document.documentElement.classList.toggle('on-landing', !!on);
+    var t = store('origin-theme');
+    if (on) applyTheme('dark');
+    else applyTheme(t === 'light' || t === 'dark' ? t : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+  }
+
+  function setUser(u) {
+    state.user = u;
+    $('#who').hidden = !u;
+    $('#nav-settings').hidden = !(u && u.isAdmin);
+    setLandingLook(!u);
+    if (!u) return;
+    $$('[data-fill="email"]').forEach(function (el) { el.textContent = u.email; });
+    $$('[data-fill="firstName"]').forEach(function (el) { el.textContent = u.firstName || ''; });
+    $$('[data-fill="initial"]').forEach(function (el) { el.textContent = (u.firstName || u.email || '?').charAt(0).toUpperCase(); });
+  }
+
+  function signOut() {
+    state.token = null; state.calls = null; state.coach = [];
+    store(TOKEN_KEY, null);
+    setUser(null);
+    location.hash = '#/';
+    route();
+    toast('Signed out.');
+  }
+  $$('[data-signout]').forEach(function (b) { b.addEventListener('click', signOut); });
+
+  function handleSession(err) {
+    if (err && err.code === 'SESSION') {
+      state.token = null;
+      store(TOKEN_KEY, null);
+      setUser(null);
+      toast(err.message || 'Your session has ended. Please sign in again.');
+      route();
+      return true;
+    }
+    return false;
+  }
+
+  /* ================= Landing + sign in ================= */
+  var SIGNIN_COPY = {
+    home: { eyebrow: 'Sign in', title: 'Take your shot.', lead: 'Use your Kestrel work email. We’ll send a one-time code to your inbox.' },
+    score: { eyebrow: 'Sign in to score', title: 'Ready to score a call?', lead: 'Use your Kestrel work email. We’ll send a one-time code, then take you straight to the scorecard.' },
+    mine: { eyebrow: 'Sign in to see your score', title: 'Your feedback is waiting.', lead: 'Use the Kestrel email your trainer scored you under. We’ll send a one-time code to your inbox.' },
+    metrics: { eyebrow: 'Sign in for the metrics', title: 'See what a 5 sounds like.', lead: 'Use your Kestrel work email. We’ll send a one-time code to your inbox.' },
+    settings: { eyebrow: 'Sign in', title: 'HAWKEYE settings', lead: 'Use your Kestrel work email. We’ll send a one-time code to your inbox.' }
+  };
+  var otpEmail = '';
+
+  function showLanding(next) {
+    state.next = next || 'home';
+    var c = SIGNIN_COPY[state.next] || SIGNIN_COPY.home;
+    $('#signin-eyebrow').textContent = c.eyebrow;
+    $('#signin-title').textContent = c.title;
+    $('#signin-lead').textContent = c.lead;
+    $('[data-step="email"]').hidden = false;
+    $('[data-step="otp"]').hidden = true;
+    $$('#signin .form-msg').forEach(function (m) { m.textContent = ''; m.classList.remove('is-ok'); });
+    setLandingLook(true);
+    show('view-landing');
+    loadStats();
+    if (next && next !== 'home') setTimeout(function () { $('#email').focus(); }, 50);
+  }
+
+  function sendCode(email, btn, msg) {
+    busy(btn, true);
+    msg.textContent = '';
+    return api('apiMockRequestOtp', email).then(function (res) {
+      otpEmail = res.email;
+      $('#otp-email').textContent = res.email;
+      $('[data-step="email"]').hidden = true;
+      $('[data-step="otp"]').hidden = false;
+      $('#otp').value = '';
+      setTimeout(function () { $('#otp').focus(); }, 50);
+    }).catch(function (e) { msg.textContent = e.message; })
+      .then(function () { busy(btn, false); });
+  }
+
+  $('#email-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = $('#email').value.trim().toLowerCase();
+    var msg = $('.form-msg', this);
+    if (!/^[^\s@]+@kestrel\.example$/.test(email)) { msg.textContent = 'Please use your @kestrel.example work email.'; return; }
+    sendCode(email, $('button', this), msg);
+  });
+
+  $('#otp-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = $('#otp').value.replace(/\D/g, '');
+    var msg = $('.form-msg', this), btn = $('button', this);
+    if (code.length !== 6) { msg.textContent = 'Enter the 6-digit code from your email.'; return; }
+    busy(btn, true);
+    msg.textContent = '';
+    api('apiMockVerifyOtp', otpEmail, code).then(function (res) {
+      state.token = res.token;
+      store(TOKEN_KEY, res.token);
+      setUser(res);
+      var hash = state.next && state.next !== 'home' ? '#/' + state.next + (state.nextArg ? '/' + state.nextArg : '') : '#/';
+      if (location.hash === hash || (hash === '#/' && !location.hash)) route(); else location.hash = hash;
+    }).catch(function (e2) { msg.textContent = e2.message; })
+      .then(function () { busy(btn, false); });
+  });
+
+  $('#otp').addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    if (this.value.length === 6) $('#otp-form').requestSubmit();
+  });
+  $('#resend').addEventListener('click', function () {
+    var msg = $('#otp-form .form-msg');
+    sendCode(otpEmail, this, msg).then(function () { if (!msg.textContent) { msg.textContent = 'A new code is on its way.'; msg.classList.add('is-ok'); } });
+  });
+  $('#change-email').addEventListener('click', function () { showLanding(state.next); });
+
+  /* ---- Landing numbers (public, aggregates only) ---- */
+  var statsReq = null;
+  function loadStats() {
+    if (state.stats) { renderBoard(); return Promise.resolve(state.stats); }
+    if (!statsReq) {
+      statsReq = api('apiMockPublicStats').then(function (s) {
+        state.stats = s;
+        applyLiveAverages(s);
+        renderBoard();
+        return s;
+      }).catch(function () {
+        statsReq = null;
+        $('#land-board').innerHTML = '<div class="board-loading"><span class="mono">Numbers are taking a breather. Refresh in a minute.</span></div>';
+      });
+    }
+    return statsReq;
+  }
+
+  function trendPill(now, prev, unit) {
+    if (now == null || prev == null) return '<span class="kpi-cmp">&nbsp;</span>';
+    var d = Math.round((now - prev) * 100) / 100;
+    if (d === 0) return '<span class="kpi-cmp">Same as last month</span>';
+    if (d < 0 && unit !== 'score') return '<span class="kpi-cmp">Last month: ' + prev + '</span>';
+    return '<span class="kpi-cmp ' + (d > 0 ? 'up' : 'down') + '">' + (d > 0 ? '▲ ' : '▼ ') + Math.abs(d) + ' vs last month</span>';
+  }
+
+  function renderBoard() {
+    var s = state.stats, b = $('#land-board');
+    if (!s || !b) return;
+    var maxW = Math.max.apply(null, s.weeks.map(function (w) { return w.n; }).concat([1]));
+    var bars = s.weeks.map(function (w, i) {
+      var h = Math.max(4, Math.round(w.n / maxW * 100));
+      return '<span class="wk' + (i === s.weeks.length - 1 ? ' is-now' : '') + '" data-w="' + i + '"><i style="height:' + h + '%"></i></span>';
+    }).join('');
+    var pulse = s.pulse.filter(function (p) { return p.avg != null; });
+    var tough = pulse.slice().sort(function (a, b2) { return a.avg - b2.avg; })[0];
+    var improved = pulse.filter(function (p) { return p.delta != null && p.delta > 0; }).sort(function (a, b2) { return b2.delta - a.delta; })[0];
+    var pulseBars = s.pulse.map(function (p) {
+      var h = p.avg == null ? 0 : Math.max(6, Math.round((p.avg - 1) / 4 * 100));
+      return '<span class="pb' + (tough && p.key === tough.key ? ' is-tough' : '') + '" data-k="' + p.key + '"><i style="height:' + h + '%"></i></span>';
+    }).join('');
+    var verts = s.byVertical.map(function (v) {
+      return '<div class="vrow"><b>' + esc(v.v) + '</b><span>' + v.calls + ' calls</span><span>' + (v.avg == null ? '–' : fmt2(v.avg)) + ' avg</span><span>' + (v.passRate == null ? '–' : v.passRate + '%') + ' good to go</span></div>';
+    }).join('');
+    b.innerHTML =
+      '<div class="board-head"><span class="eyebrow">' + esc(s.month) + ' in mock calls</span><span class="board-live"><span class="live-dot"></span>Live</span></div>' +
+      '<div class="kpis">' +
+        '<div class="kpi"><span class="kpi-l">Calls scored</span><b class="kpi-v" data-count="' + s.calls + '">' + s.calls + '</b>' + trendPill(s.calls, s.callsPrev) + '</div>' +
+        '<div class="kpi"><span class="kpi-l">Cleared for the floor</span><b class="kpi-v" data-count="' + s.cleared + '">' + s.cleared + '</b>' + trendPill(s.cleared, s.clearedPrev) + '</div>' +
+        '<div class="kpi"><span class="kpi-l">First-try pass rate</span><b class="kpi-v">' + (s.firstTry == null ? '–' : s.firstTry + '<small>%</small>') + '</b><span class="kpi-cmp">Round 1 calls, last 90 days</span></div>' +
+        '<div class="kpi"><span class="kpi-l">Average score</span><b class="kpi-v">' + (s.avgScore == null ? '–' : fmt2(s.avgScore) + '<small>/5</small>') + '</b>' + trendPill(s.avgScore, s.avgScorePrev, 'score') + '</div>' +
+      '</div>' +
+      '<div class="board-sec"><div class="board-sub"><span>Calls per week</span><span class="muted">last ' + s.weeks.length + ' weeks</span></div><div class="weeks">' + bars + '</div></div>' +
+      '<div class="board-sec"><div class="board-sub"><span>Criteria pulse</span><span class="muted">average, last 90 days</span></div><div class="pulse">' + pulseBars + '</div>' +
+        '<div class="pulse-notes">' + (tough ? '<span><i class="dot-warn"></i>Toughest: <b>' + esc(tough.label) + '</b> ' + fmt2(tough.avg) + '</span>' : '') +
+        (improved ? '<span><i class="dot-ok"></i>Most improved: <b>' + esc(improved.label) + '</b> +' + fmt2(improved.delta) + '</span>' : '') + '</div></div>' +
+      '<div class="board-sec verts">' + verts + '</div>' +
+      '<p class="board-foot">' + s.total + ' calls scored since ' + esc(s.from) + (s.callsToClear ? ' · it takes ' + s.callsToClear + ' calls on average to clear' : '') + '</p>';
+    $$('.wk', b).forEach(function (el) {
+      var w = s.weeks[Number(el.getAttribute('data-w'))];
+      el.addEventListener('mousemove', function (e) {
+        showTip('Week of ' + esc(fmtDate(w.w).replace(/ \d{4}$/, '')) + '<br><b>' + w.n + '</b> call' + (w.n === 1 ? '' : 's') + (w.avg != null ? ' · ' + fmt2(w.avg) + ' avg' : ''), e.clientX, e.clientY);
+      });
+      el.addEventListener('mouseleave', hideTip);
+    });
+    $$('.pb', b).forEach(function (el) {
+      var p = s.pulse.filter(function (x) { return x.key === el.getAttribute('data-k'); })[0];
+      el.addEventListener('mousemove', function (e) {
+        showTip('<b>' + esc(p.label) + '</b><br>' + (p.avg == null ? 'Not enough calls yet' : fmt2(p.avg) + ' / 5 average') + (p.delta ? ' · ' + (p.delta > 0 ? '+' : '') + fmt2(p.delta) + ' vs the 90 days before' : ''), e.clientX, e.clientY);
+      });
+      el.addEventListener('mouseleave', hideTip);
+    });
+  }
+
+  /** The metrics page's averages come from every scored call, not a fixed snapshot. */
+  function applyLiveAverages(s) {
+    if (!s || !s.averages) return;
+    Object.keys(s.averages).forEach(function (k) { if (GUIDE.criteria[k]) GUIDE.criteria[k].avg = s.averages[k]; });
+    GUIDE.snapshot.counts = s.counts;
+    GUIDE.snapshot.calls = s.total;
+    GUIDE.snapshot.from = s.from;
+    GUIDE.snapshot.to = s.to;
+    GUIDE.snapshot.live = true;
+    if (state.metricsBuilt && !$('#view-metrics').hidden) paintMetrics();
+  }
+
+  /* ================= Scoring form ================= */
+  var draftTimer;
+  function draftKey() { return 'mcp-draft:' + (state.user ? state.user.email : ''); }
+
+  function fieldHtml(f) {
+    var id = 'f-' + f.key;
+    var help = f.help ? '<p class="help">' + esc(f.help) + '</p>' : '';
+    var input;
+    if (f.type === 'radio') {
+      input = '<div class="pills" role="radiogroup" aria-labelledby="' + id + '-l">' + f.options.map(function (o) {
+        return '<label class="pill"><input type="radio" name="' + f.key + '" value="' + esc(o.value) + '"><span>' + esc(o.label) + '</span></label>';
+      }).join('') + '</div>';
+    } else if (f.type === 'textarea') {
+      input = '<textarea class="input" id="' + id + '" name="' + f.key + '" maxlength="' + f.max + '" rows="4"></textarea>';
+    } else {
+      var attrs = { text: 'type="text"', email: 'type="email" autocomplete="off" placeholder="name@kestrel.example"', url: 'type="url" placeholder="https://example.com/recording"', number: 'type="number" inputmode="numeric" min="' + f.min + '" max="' + f.max + '" step="1" placeholder="e.g. 25"' }[f.type] || 'type="text"';
+      input = '<input class="input" id="' + id + '" name="' + f.key + '" ' + attrs + (f.max && f.type !== 'number' ? ' maxlength="' + f.max + '"' : '') + '>';
+    }
+    var wide = f.type === 'textarea' || f.type === 'radio' && f.options.length > 2 || f.key === 'customer' || f.key === 'recording';
+    return '<div class="field' + (wide ? ' is-wide' : '') + '" data-field="' + f.key + '">' +
+      '<label class="field-label" id="' + id + '-l"' + (f.type === 'radio' ? '' : ' for="' + id + '"') + '>' + esc(f.label) + '</label>' + help + input +
+      '<p class="err" role="alert"></p></div>';
+  }
+
+  function critHtml(c, i) {
+    var g = GUIDE.criteria[c.key] || {};
+    var what = String(g.what || '').split('. ')[0].replace(/\.$/, '') + '.';
+    var labels = ['Missing', 'Weak', 'Average', 'Good', 'Excellent'];
+    var rates = labels.map(function (l, k) {
+      return '<label class="rate"><input type="radio" name="r-' + c.key + '" value="' + (k + 1) + '" aria-label="' + (k + 1) + ' ' + l + '"><span><b>' + (k + 1) + '</b><small>' + l + '</small></span></label>';
+    }).join('');
+    if (c.na) rates += '<label class="rate is-na"><input type="radio" name="r-' + c.key + '" value="na" aria-label="Not applicable"><span><b>N/A</b><small>Not applicable</small></span></label>';
+    return '<div class="crit" data-crit="' + c.key + '"' + (c.presales ? ' data-presales hidden' : '') + '>' +
+      '<div class="crit-head"><span class="crit-num">' + String(i + 1).padStart(2, '0') + '</span><span class="crit-name">' + esc(c.label) + '</span>' +
+      (c.presales ? '<span class="crit-tag">Pre-sales only</span>' : '') +
+      '<span class="crit-hint">' + esc(what) + ' <a href="#/metrics/' + c.key + '" target="_blank" rel="noopener">Guide ↗</a></span></div>' +
+      '<div class="crit-body"><div class="rating" role="radiogroup" aria-label="' + esc(c.label) + ' rating">' + rates + '</div>' +
+      '<textarea class="input" name="fb-' + c.key + '" rows="2" maxlength="2000" aria-label="' + esc(c.label) + ' feedback" placeholder="What did they do well, and what should they change?"></textarea>' +
+      '<p class="err" role="alert"></p></div></div>';
+  }
+
+  function renderScoreForm() {
+    var form = state.user.form;
+    $('#fields-details').innerHTML = form.fields.filter(function (f) { return f.group === 'details'; }).map(fieldHtml).join('');
+    $('#fields-close').innerHTML = form.fields.filter(function (f) { return f.group === 'close'; }).map(fieldHtml).join('');
+    $('#crit-list').innerHTML = form.criteria.map(critHtml).join('');
+    $('#score-msg').textContent = '';
+    $('#cand-hint').hidden = true;
+    lastLookup = '';
+    restoreDraft();
+    if (!$('#score-form [name="conductedBy"]').value) $('#score-form [name="conductedBy"]').value = state.user.name || '';
+    syncScore();
+  }
+
+  function formEl(name) { return $('#score-form').elements[name]; }
+  function radioVal(name) {
+    var c = $('#score-form input[name="' + name + '"]:checked');
+    return c ? c.value : '';
+  }
+  function setRadio(name, val) {
+    $$('#score-form input[name="' + name + '"]').forEach(function (r) { r.checked = r.value === String(val); });
+  }
+
+  function collect() {
+    var form = state.user.form, a = { criteria: {} };
+    form.fields.forEach(function (f) { a[f.key] = f.type === 'radio' ? radioVal(f.key) : (formEl(f.key).value || '').trim(); });
+    form.criteria.forEach(function (c) {
+      a.criteria[c.key] = { rating: radioVal('r-' + c.key), feedback: (formEl('fb-' + c.key).value || '').trim() };
+    });
+    return a;
+  }
+
+  // Call schedule is scored only on pre-sales calls; Data has no placement support, so it's never scored there.
+  function applicable(c, a) { return (!c.presales || a.role === 'presales') && !(c.key === 'placement' && a.vertical === 'Data'); }
+
+  function syncScore() {
+    var form = state.user.form, a = collect();
+    var role = a.role;
+    form.criteria.forEach(function (c) { $('[data-crit="' + c.key + '"]').hidden = !applicable(c, a); });
+    var crits = form.criteria.filter(function (c) { return applicable(c, a); });
+    var rated = 0, scores = [];
+    crits.forEach(function (c) {
+      var r = a.criteria[c.key].rating;
+      $('[data-crit="' + c.key + '"]').classList.toggle('is-rated', !!r);
+      if (r) rated++;
+      if (/^[1-5]$/.test(r)) scores.push(Number(r));
+    });
+    var avg = scores.length ? scores.reduce(function (x, y) { return x + y; }, 0) / scores.length : null;
+    $('#sb-count').textContent = rated + ' of ' + crits.length + ' rated';
+    $('#sb-fill').style.width = (crits.length ? rated / crits.length * 100 : 0) + '%';
+    $('#sb-avg').textContent = avg == null ? '–' : fmt2(Math.round(avg * 100) / 100);
+    var pass = form.pass[role], pill = $('#sb-pass'), hint = $('#verdict-hint');
+    if (avg != null && pass) {
+      var above = avg >= pass;
+      pill.textContent = (above ? 'At or above ' : 'Below ') + pass + ' pass';
+      pill.className = 'sb-pass ' + (above ? 'is-above' : 'is-below');
+      hint.hidden = rated < crits.length;
+      hint.innerHTML = 'Final score <b>' + fmt2(Math.round(avg * 100) / 100) + ' / 5</b> is ' + (above ? 'at or above' : 'below') +
+        ' the <b>' + pass + '</b> pass mark for ' + ROLE_NAME[role] + '. The verdict is still your call.';
+    } else {
+      pill.textContent = role ? '' : 'Pick a role to see the pass mark';
+      pill.className = 'sb-pass';
+      hint.hidden = true;
+    }
+  }
+
+  function saveDraft() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(function () { store(draftKey(), JSON.stringify(collect())); }, 300);
+  }
+  function restoreDraft() {
+    var raw = store(draftKey());
+    if (!raw) return;
+    try {
+      var a = JSON.parse(raw), form = state.user.form;
+      form.fields.forEach(function (f) {
+        if (a[f.key] == null) return;
+        if (f.type === 'radio') setRadio(f.key, a[f.key]); else formEl(f.key).value = a[f.key];
+      });
+      form.criteria.forEach(function (c) {
+        var v = a.criteria && a.criteria[c.key];
+        if (!v) return;
+        setRadio('r-' + c.key, v.rating);
+        formEl('fb-' + c.key).value = v.feedback || '';
+      });
+    } catch (e) { /* ignore a broken draft */ }
+  }
+
+  function clearErrors() { $$('#score-form .has-error').forEach(function (el) { el.classList.remove('has-error'); }); }
+  function flag(el, msg) {
+    el.classList.add('has-error');
+    $('.err', el).textContent = msg;
+  }
+
+  function validate(a) {
+    var form = state.user.form, first = null;
+    var mark = function (el, msg) { flag(el, msg); if (!first) first = el; };
+    form.fields.forEach(function (f) {
+      var v = a[f.key], el = $('[data-field="' + f.key + '"]');
+      if (!v) return f.optional ? null : mark(el, f.type === 'radio' ? 'Please pick one.' : 'Please fill this in.');
+      if (f.type === 'email' && !/^[^\s@]+@kestrel\.example$/i.test(v)) return mark(el, f.key === 'candidateEmail' ? 'Use the candidate’s @kestrel.example email, so they can see their scorecard.' : 'Use their @kestrel.example email.');
+      if (f.type === 'url' && !/^https:\/\/\S+$/i.test(v)) return mark(el, 'Paste the full link, starting with https://');
+      if (f.type === 'number' && (!/^\d+$/.test(v) || Number(v) < f.min || Number(v) > f.max)) return mark(el, 'Whole minutes, ' + f.min + '–' + f.max + '.');
+    });
+    form.criteria.forEach(function (c) {
+      if (!applicable(c, a)) return;
+      var v = a.criteria[c.key], el = $('[data-crit="' + c.key + '"]');
+      if (!v.rating) return mark(el, 'Please rate this criterion.');
+      if (v.rating !== 'na' && !v.feedback) return mark(el, 'Please add a line of feedback. The trainee will read it.');
+    });
+    return first;
+  }
+
+  $('#score-form').addEventListener('input', function (e) {
+    var box = e.target.closest('.has-error');
+    if (box && e.target.value) box.classList.remove('has-error');
+    syncScore(); saveDraft();
+  });
+  $('#score-form').addEventListener('change', function (e) {
+    var box = e.target.closest('.has-error');
+    if (box) box.classList.remove('has-error');
+    if (e.target.name === 'candidateEmail') lookupCandidate();
+    syncScore(); saveDraft();
+  });
+
+  // When the scorer types a candidate's email, fill in what we know from earlier calls.
+  var lastLookup = '';
+  function lookupCandidate() {
+    var email = (formEl('candidateEmail').value || '').trim().toLowerCase(), hint = $('#cand-hint');
+    if (!/^[^\s@]+@kestrel\.example$/.test(email) || email === lastLookup) return;
+    lastLookup = email;
+    hint.hidden = false;
+    hint.innerHTML = '<span class="mono muted">Looking them up…</span>';
+    api('apiMockCandidate', state.token, email).then(function (c) {
+      if (lastLookup !== email) return;
+      var filled = [];
+      if (c.name && !formEl('candidateName').value) { formEl('candidateName').value = c.name; filled.push('name'); }
+      if (c.managerEmail && !formEl('managerEmail').value) { formEl('managerEmail').value = c.managerEmail; filled.push('manager'); }
+      if (c.role && !radioVal('role')) { setRadio('role', c.role); filled.push('role'); }
+      if (c.vertical && !radioVal('vertical')) { setRadio('vertical', c.vertical); filled.push('vertical'); }
+      if (c.suggestedRound && !radioVal('round')) { setRadio('round', c.suggestedRound); filled.push('round'); }
+      var history = c.calls.length ? ' ' + c.calls.map(function (x) { return esc(x.round || 'Call') + ' ' + fmt2(x.score) + ' (' + (/good/i.test(x.verdict) ? 'good to go' : 'need to improve') + ')'; }).join(' → ') + '.' : '';
+      hint.innerHTML = !c.count
+        ? 'First mock call for <b>' + esc(email) + '</b>. Round 1 is picked for you.'
+        : '<b>' + esc(c.name || email) + '</b> has ' + c.count + ' earlier call' + (c.count === 1 ? '' : 's') + '.' + history +
+          (filled.length ? ' Filled in: ' + filled.join(', ') + '. Check them before you submit.' : '');
+      syncScore(); saveDraft();
+    }).catch(function () { hint.hidden = true; });
+  }
+  $('#score-clear').addEventListener('click', function () {
+    if (!confirm('Clear everything on this scorecard?')) return;
+    store(draftKey(), null);
+    renderScoreForm();
+    window.scrollTo(0, 0);
+  });
+
+  $('#score-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearErrors();
+    var a = collect(), msg = $('#score-msg'), btn = $('#score-submit');
+    msg.textContent = '';
+    var bad = validate(a);
+    if (bad) {
+      msg.textContent = 'A few answers need a look. They’re marked in red.';
+      bad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (a.role !== 'presales') delete a.criteria.schedule;
+    if (a.vertical === 'Data') a.criteria.placement = { rating: 'na', feedback: '' };
+    a.sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    busy(btn, true);
+    api('apiMockSubmit', state.token, a).then(function (res) {
+      store(draftKey(), null);
+      $('#done-title').textContent = res.candidateName + '’s scorecard is in.';
+      $('#done-lead').innerHTML = 'Final score <b>' + fmt2(res.score) + ' / 5</b> · ' + esc(res.verdict === 'Good to Go' ? 'Good to go' : 'Need to improve') +
+        '. It’s saved to the mock call responses sheet, and ' + esc(res.candidateName.split(' ')[0]) +
+        ' can see it now under <b>I want to see my score</b>.';
+      var m = res.email || {};
+      $('#done-mail').innerHTML = m.sent
+        ? '✉ Emailed to <b>' + esc(m.to) + '</b>' + (m.cc && m.cc.length ? ', copying ' + esc(m.cc.join(', ')) : '') + '.'
+        : m.reason ? esc(m.reason) : m.error ? 'The scorecard is saved, but the email didn’t go out: ' + esc(m.error) : '';
+      location.hash = '#/scored';
+    }).catch(function (err) {
+      if (handleSession(err)) return;
+      msg.textContent = err.message;
+    }).then(function () { busy(btn, false); });
+  });
+
+  /* ================= My score ================= */
+  // Calls arrive oldest first. The page shows a holistic summary (once every round is cleared)
+  // or a progress card on top, then each call's own summary, newest first, filterable by round.
+  var GROUPS = { all: 'All calls', r1: 'Round 1', r2: 'Round 2', extra: 'Additional attempts', earlier: 'Earlier calls' };
+
+  function passFor(call) { return call.role ? state.pass[call.role] : null; }
+  function groupOf(c) { return c.round === 'Round 1' ? 'r1' : c.round === 'Round 2' ? 'r2' : c.round ? 'extra' : 'earlier'; }
+  function scored(call) { return call.criteria.filter(function (c) { return typeof c.score === 'number'; }); }
+  function isGood(call) { return /good/i.test(call.verdict); }
+  function shownCriteria(call) {
+    // Data calls don't score placement: leave it out rather than show an empty row.
+    return call.criteria.filter(function (c) { return !(c.key === 'placement' && call.vertical === 'Data' && typeof c.score !== 'number'); });
+  }
+
+  /** Display labels, e.g. "Round 1", "Additional attempt 2", "Call 3" (calls scored before rounds were recorded). */
+  function callLabels(calls) {
+    var extras = calls.filter(function (c) { return groupOf(c) === 'extra'; }).length, n = 0;
+    return calls.map(function (c, i) {
+      var g = groupOf(c);
+      if (g === 'extra') { n++; return extras > 1 ? c.round + ' ' + n : c.round; }
+      return c.round || 'Call ' + (i + 1);
+    });
+  }
+
+  /** Cleared every round: the latest call is Good to go, and it was Round 2 (or a re-attempt after it, or an older call without rounds). */
+  function isCleared(calls) {
+    var last = calls[calls.length - 1], g = groupOf(last);
+    if (!isGood(last)) return false;
+    if (g === 'r2' || g === 'earlier') return true;
+    return g === 'extra' && calls.some(function (c) { return groupOf(c) === 'r2'; });
+  }
+
+  function summarize(call, prev) {
+    var s = scored(call);
+    var byHigh = s.slice().sort(function (a, b) { return b.score - a.score; });
+    var byLow = s.slice().sort(function (a, b) { return a.score - b.score; });
+    var strengths = byHigh.filter(function (c) { return c.score >= 4; }).slice(0, 3);
+    var areas = byLow.filter(function (c) { return c.score <= 3; }).slice(0, 3);
+    var polish = false;
+    if (!areas.length) { areas = byLow.filter(function (c) { return c.score < 5; }).slice(0, 2); polish = true; }
+
+    var pass = passFor(call), parts = [];
+    var who = call.conductedBy ? ' with ' + esc(call.conductedBy) : '';
+    var head = 'You scored <b>' + fmt2(call.score) + ' out of 5</b> across ' + s.length + ' criteria on this ' + (call.round ? esc(call.round) + ' ' : '') + 'mock call' + who;
+    if (pass && call.score != null) {
+      var diff = Math.round((call.score - pass) * 100) / 100;
+      head += diff >= 0 ? (diff > 0 ? ', above the ' : ', right at the ') + pass + ' pass mark for ' + ROLE_NAME[call.role] + '.' : ', ' + fmt2(Math.abs(diff)) + ' below the ' + pass + ' pass mark for ' + ROLE_NAME[call.role] + '.';
+    } else head += '.';
+    parts.push(head);
+
+    if (isGood(call)) parts.push('Your trainer’s verdict was <b>Good to go</b>.');
+    else if (/improve/i.test(call.verdict)) parts.push('Your trainer’s verdict was <b>Need to improve</b>, so another mock call followed.');
+
+    var line = '';
+    if (strengths.length) line += 'You were strongest on ' + listText(strengths.map(function (c) { return '<b>' + esc(c.label) + '</b>'; })) + '. ';
+    if (areas.length) line += (polish ? 'To push higher, polish ' : 'The biggest gains were in ') + listText(areas.map(function (c) { return '<b>' + esc(c.label) + '</b>'; })) + '.';
+    if (line) parts.push(line);
+
+    if (prev && prev.score != null && call.score != null) {
+      var d = Math.round((call.score - prev.score) * 100) / 100;
+      var ups = [], downs = [];
+      call.criteria.forEach(function (c) {
+        var p = prev.criteria.filter(function (x) { return x.key === c.key; })[0];
+        if (!p || typeof p.score !== 'number' || typeof c.score !== 'number') return;
+        if (c.score > p.score) ups.push(c.label); else if (c.score < p.score) downs.push(c.label);
+      });
+      var t = d === 0 ? 'Your overall score matched your previous call (' + fmt2(prev.score) + ').'
+        : 'That’s ' + (d > 0 ? 'up' : 'down') + ' ' + fmt2(Math.abs(d)) + ' from your previous call (' + fmt2(prev.score) + ').';
+      if (ups.length) t += ' You improved on ' + (ups.length > 4 ? ups.slice(0, 4).map(esc).join(', ') + ' and ' + (ups.length - 4) + ' more' : listText(ups.map(esc))) + '.';
+      if (downs.length) t += ' ' + listText(downs.slice(0, 3).map(esc)) + (downs.length > 3 ? ' and others' : '') + ' slipped a little.';
+      parts.push(t);
+    }
+    return { paragraphs: parts, strengths: strengths, areas: areas, polish: polish };
+  }
+
+  /** Per-criterion history across every call, for the holistic summary. */
+  function criterionHistory(calls) {
+    var keys = [], byKey = {};
+    calls.forEach(function (call, i) {
+      call.criteria.forEach(function (c) {
+        if (typeof c.score !== 'number') return;
+        if (!byKey[c.key]) { byKey[c.key] = { key: c.key, label: c.label, pts: [] }; keys.push(c.key); }
+        byKey[c.key].pts.push({ i: i, score: c.score });
+      });
+    });
+    return keys.map(function (k) {
+      var h = byKey[k], sc = h.pts.map(function (p) { return p.score; });
+      h.avg = Math.round(sc.reduce(function (a, b) { return a + b; }, 0) / sc.length * 100) / 100;
+      h.first = sc[0];
+      h.last = sc[sc.length - 1];
+      h.lastI = h.pts[h.pts.length - 1].i;
+      h.lows = sc.filter(function (s) { return s <= 3; }).length;
+      return h;
+    });
+  }
+
+  function ringSvg(score, pass, size) {
+    var r = 70, C = 2 * Math.PI * r, frac = score == null ? 0 : Math.max(0, Math.min(1, score / 5));
+    var tick = '';
+    if (pass) {
+      var th = pass / 5 * 2 * Math.PI;
+      var x1 = 84 + 60 * Math.cos(th), y1 = 84 + 60 * Math.sin(th), x2 = 84 + 80 * Math.cos(th), y2 = 84 + 80 * Math.sin(th);
+      tick = '<line class="pass-tick" x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
+    }
+    return '<svg viewBox="0 0 168 168" aria-hidden="true"><circle class="track" cx="84" cy="84" r="' + r + '" fill="none" stroke-width="' + (size === 'sm' ? 16 : 12) + '"/>' +
+      '<circle class="val" cx="84" cy="84" r="' + r + '" fill="none" stroke-width="' + (size === 'sm' ? 16 : 12) + '" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + C.toFixed(1) + '" data-target="' + (C * (1 - frac)).toFixed(1) + '"/>' + tick + '</svg>';
+  }
+
+  function trendSvg(calls, labels) {
+    var W = 600, H = 190, L = 30, R = 16, T = 14, B = 44;
+    var n = calls.length, cur = n - 1;
+    var x = function (i) { return n === 1 ? (L + W - R) / 2 : L + 20 + i * (W - L - R - 40) / (n - 1); };
+    var y = function (v) { return T + (5 - v) / 4 * (H - T - B); };
+    var g = '';
+    [1, 2, 3, 4, 5].forEach(function (v) {
+      g += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v) + '" y2="' + y(v) + '"/><text class="axis-t" x="' + (L - 10) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>';
+    });
+    var pass = passFor(calls[cur]);
+    if (pass) g += '<line class="pass" x1="' + L + '" x2="' + (W - R) + '" y1="' + y(pass) + '" y2="' + y(pass) + '"/>';
+    var pts = calls.map(function (c, i) { return c.score == null ? null : [x(i), y(c.score)]; });
+    var path = pts.filter(Boolean).map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    g += '<path class="ln" d="' + path + '"/>';
+    calls.forEach(function (c, i) {
+      var short = labels[i].replace('Round ', 'R').replace(/Additional attempt ?/, 'Extra ').trim();
+      g += '<text class="axis-t" x="' + x(i) + '" y="' + (H - 22) + '" text-anchor="middle">' + esc(short) + '</text>' +
+        '<text class="axis-t" x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(fmtDate(c.date).replace(/ \d{4}$/, '')) + '</text>';
+      if (!pts[i]) return;
+      g += '<circle class="pt' + (isGood(c) ? ' is-good' : '') + (i === cur ? ' is-cur' : '') + '" cx="' + pts[i][0].toFixed(1) + '" cy="' + pts[i][1].toFixed(1) + '" r="' + (i === cur ? 7 : 5) + '"/>' +
+        '<text class="pt-v" x="' + pts[i][0].toFixed(1) + '" y="' + (pts[i][1] - 12).toFixed(1) + '" text-anchor="middle">' + fmt2(c.score) + '</text>' +
+        '<circle class="hit" data-i="' + i + '" cx="' + pts[i][0].toFixed(1) + '" cy="' + pts[i][1].toFixed(1) + '" r="18"/>';
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Your score across ' + n + ' mock calls">' + g + '</svg>';
+  }
+
+  /** The top card: holistic summary once cleared, otherwise progress so far. */
+  function topCardHtml(calls, labels) {
+    var cleared = isCleared(calls), hist = criterionHistory(calls);
+    var last = calls[calls.length - 1], first = calls[0];
+    var held = hist.filter(function (h) { return h.lows > 0; })
+      .sort(function (a, b) { return b.lows - a.lows || a.avg - b.avg; }).slice(0, 6);
+    var focus = (cleared
+      ? hist.filter(function (h) { return h.avg < 4.5; }).sort(function (a, b) { return a.avg - b.avg || a.last - b.last; })
+      : hist.filter(function (h) { return h.lastI === calls.length - 1 && h.last < 5; }).sort(function (a, b) { return a.last - b.last || a.avg - b.avg; })
+    ).slice(0, 3);
+    var steady = hist.filter(function (h) { return h.avg >= 4.5; }).sort(function (a, b) { return b.avg - a.avg; }).slice(0, 3);
+    var improved = hist.filter(function (h) { return h.pts.length > 1 && h.last - h.first >= 1; }).sort(function (a, b) { return (b.last - b.first) - (a.last - a.first); }).slice(0, 3);
+    var bold = function (h) { return '<b>' + esc(h.label) + '</b>'; };
+
+    var paras = [];
+    if (cleared) {
+      paras.push('You cleared your mock calls on <b>' + esc(fmtDate(last.date)) + '</b> with a <b>' + fmt2(last.score) + '</b> on ' + esc(labels[calls.length - 1]) +
+        (calls.length > 1 ? ', after ' + calls.length + ' calls. Your score moved from ' + fmt2(first.score) + ' on your first call to ' + fmt2(last.score) + ' on your last.' : '.'));
+    } else {
+      paras.push('You’ve taken ' + calls.length + ' mock call' + (calls.length === 1 ? '' : 's') + ' so far. Your latest score is <b>' + fmt2(last.score) + '</b>' +
+        (passFor(last) ? ' against a ' + passFor(last) + ' pass mark' : '') + '. Your holistic summary appears here once you clear every round.');
+    }
+    var worst = held.slice(0, 3);
+    if (worst.length) paras.push((cleared ? 'Across all your calls, the criteria that held you back most were ' : 'So far, the criteria holding you back are ') +
+      listText(worst.map(function (h) { return bold(h) + ' (average ' + fmt2(h.avg) + ')'; })) + '.');
+    else paras.push('You never scored below 4 on any criterion. That’s rare.');
+    if (improved.length) paras.push('Your biggest improvements were ' + listText(improved.map(function (h) { return bold(h) + ' (' + h.first + ' → ' + h.last + ')'; })) + '.');
+    if (steady.length) paras.push('You were consistently strong on ' + listText(steady.map(bold)) + ': keep doing what works there.');
+    if (focus.length) paras.push((cleared ? 'As you move onto the floor, focus on ' : 'Before your next call, focus on ') + listText(focus.map(bold)) + '.');
+
+    var heldRows = held.map(function (h) {
+      var path = h.pts.map(function (p) { return '<span class="sc ' + (p.score <= 3 ? 'lo' : 'hi') + '" title="' + esc(labels[p.i]) + '">' + p.score + '</span>'; }).join('<span class="arrow">→</span>');
+      var fixed = h.last >= 4;
+      return '<div class="held-row"><span class="held-name">' + esc(h.label) + '<small>average ' + fmt2(h.avg) + ' · scored 3 or lower in ' + h.lows + ' of ' + h.pts.length + ' call' + (h.pts.length === 1 ? '' : 's') + '</small></span>' +
+        '<span class="held-path">' + path + '</span>' +
+        '<span class="held-status ' + (fixed ? 'ok' : 'warn') + '">' + (fixed ? 'Now at ' + h.last : 'Still at ' + h.last) + '</span>' +
+        '<a class="held-link" href="#/metrics/' + h.key + '" target="_self">Open criterion →</a></div>';
+    }).join('');
+    var focusRows = focus.map(function (h, k) {
+      var gd = GUIDE.criteria[h.key];
+      return '<li><span class="fnum">' + (k + 1) + '</span><span><b>' + esc(h.label) + '</b> <span class="muted">' + (cleared ? 'average ' + fmt2(h.avg) : 'latest ' + h.last) + '</span>' +
+        (gd ? '<br><span class="ftip">' + esc(gd.good[0].t) + '</span>' : '') + '<br><a href="#/metrics/' + h.key + '" target="_self">What a 5 looks like →</a></span></li>';
+    }).join('');
+
+    return '<section class="panel top-card reveal' + (cleared ? ' is-cleared' : '') + '">' +
+      '<div class="tc-head"><div><p class="eyebrow">' + (cleared ? 'Holistic summary' : 'Your progress so far') + '</p>' +
+        '<h2>' + (cleared ? 'You’ve cleared your mock calls' : 'Keep going: you’re ' + (isGood(last) ? 'through this round' : 'working towards a pass')) + '</h2></div>' +
+        (cleared ? '<span class="verdict ok">✓ All rounds cleared</span>' : '<span class="verdict warn">In progress</span>') + '</div>' +
+      '<div class="tc-stats">' +
+        '<div><b>' + calls.length + '</b><span>call' + (calls.length === 1 ? '' : 's') + ' taken</span></div>' +
+        '<div><b>' + fmt2(first.score) + '</b><span>first score</span></div>' +
+        '<div><b>' + fmt2(last.score) + '</b><span>' + (cleared ? 'final score' : 'latest score') + '</span></div>' +
+        '<div><b>' + (calls.length > 1 && first.score != null && last.score != null ? (last.score - first.score >= 0 ? '+' : '−') + fmt2(Math.abs(Math.round((last.score - first.score) * 100) / 100)) : '–') + '</b><span>change</span></div>' +
+      '</div>' +
+      '<div class="tc-grid">' +
+        '<div>' + paras.map(function (p) { return '<p class="summary-text">' + p + '</p>'; }).join('') + '</div>' +
+        '<div class="trend">' + (calls.length > 1
+          ? '<div class="trend-head"><span class="eyebrow">Score across attempts</span><span class="muted" style="font-size:12.5px">' + (passFor(last) ? 'Dashed line: ' + passFor(last) + ' pass mark · ' : '') + 'Tap a point to open that call</span></div>' + trendSvg(calls, labels)
+          : '<p class="empty-note">Your score trend appears after your second call.</p>') + '</div>' +
+      '</div>' +
+      (focusRows ? '<div class="focus"><h3>' + (cleared ? 'Major areas to focus on' : 'Focus for your next call') + '</h3><ol class="focus-list">' + focusRows + '</ol></div>' : '') +
+      (heldRows ? '<div class="held"><h3>Criteria that held you back</h3><p class="muted held-sub">Every criterion you scored 3 or lower on, with your score on each call in order.</p>' + heldRows + '</div>' : '') +
+    '</section>';
+  }
+
+  function callCardHtml(call, i, calls, labels, open) {
+    var prev = i > 0 ? calls[i - 1] : null, pass = passFor(call), good = isGood(call);
+    var sum = summarize(call, prev);
+    var meta = [call.vertical, ROLE_NAME[call.role], call.duration ? call.duration + ' min' : '', call.customer ? 'Customer: ' + call.customer : '']
+      .filter(Boolean).map(esc).join(' · ');
+    var rec = [call.recording, call.recording2].filter(function (u) { return /^https:\/\//i.test(u); });
+    if (rec.length) meta += (meta ? ' · ' : '') + rec.map(function (u, k) { return '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + (k ? 'Recording part 2' : 'Recording') + ' ↗</a>'; }).join(' · ');
+
+    var mini = function (list, cls) {
+      return list.map(function (c) {
+        return '<div class="sw"><span class="sw-score ' + cls + '">' + c.score + '</span><span class="sw-name">' + esc(c.label) + '</span>' +
+          '<span class="sw-fb">' + (c.feedback ? esc(c.feedback) : '<span class="muted">No written feedback.</span>') +
+          (cls === 'lo' ? ' <a href="#/metrics/' + c.key + '" target="_self">What good looks like →</a>' : '') + '</span></div>';
+      }).join('');
+    };
+    // HAWKEYE's take (AI): its own strengths and focus points, matched back to the criteria for scores and links.
+    var ai = call.ai;
+    var critByLabel = function (label) {
+      var l = String(label || '').toLowerCase();
+      return call.criteria.filter(function (c) { return c.label.toLowerCase() === l; })[0] || null;
+    };
+    var aiMini = function (list, cls, field) {
+      return list.map(function (it) {
+        var c = critByLabel(it.criterion);
+        return '<div class="sw"><span class="sw-score ' + cls + '">' + (c && typeof c.score === 'number' ? c.score : '•') + '</span><span class="sw-name">' + esc(it.criterion) + '</span>' +
+          '<span class="sw-fb">' + esc(it[field]) + (cls === 'lo' && c ? ' <a href="#/metrics/' + c.key + '" target="_self">What good looks like →</a>' : '') + '</span></div>';
+      }).join('');
+    };
+    var take = ai
+      ? '<div class="take"><h4><span class="spark" aria-hidden="true">✦</span>HAWKEYE’s take</h4><p class="take-head">' + esc(ai.headline) + '</p><p class="summary-text">' + esc(ai.summary) + '</p>' +
+        (ai.nextCall ? '<p class="take-next"><b>Before your next call:</b> ' + esc(ai.nextCall) + '</p>' : '') + '</div>'
+      : state.user.coach ? '<div class="take is-loading" data-take="' + call.id + '"><h4><span class="spark" aria-hidden="true">✦</span>HAWKEYE’s take</h4><p class="muted">HAWKEYE is listening back to this call…</p></div>' : '';
+    var summaryHtml = ai ? take : take + '<h4>Summary</h4>' + sum.paragraphs.map(function (p) { return '<p class="summary-text">' + p + '</p>'; }).join('');
+
+    var crits = shownCriteria(call);
+    var rows = crits.map(function (c, k) {
+      var p = prev && prev.criteria.filter(function (x) { return x.key === c.key; })[0];
+      var delta = '';
+      if (p && typeof p.score === 'number' && typeof c.score === 'number' && p.score !== c.score) {
+        var d = c.score - p.score;
+        delta = '<span class="delta ' + (d > 0 ? 'up' : 'down') + '" title="Change since your previous call">' + (d > 0 ? '▲' : '▼') + Math.abs(d) + '</span>';
+      }
+      var segs = '';
+      for (var s = 1; s <= 5; s++) segs += '<i' + (typeof c.score === 'number' && s <= c.score ? ' class="on"' : '') + '></i>';
+      var scoreCell = typeof c.score === 'number'
+        ? '<span class="segs" aria-hidden="true">' + segs + '</span><span class="bd-val">' + c.score + '</span>' + delta
+        : '<span class="na">' + (c.feedback ? 'Not scored' : 'N/A') + '</span>';
+      return '<div class="bd-row"><div class="bd-name"><small>' + String(k + 1).padStart(2, '0') + '</small>' + esc(c.label) + '</div>' +
+        '<div class="bd-score" aria-label="' + (typeof c.score === 'number' ? c.score + ' out of 5' : 'Not scored') + '">' + scoreCell + '</div>' +
+        '<div class="bd-fb">' + (c.feedback ? esc(c.feedback) : '<span class="muted">' + (typeof c.score === 'number' ? 'No written feedback.' : 'Not applicable on this call.') + '</span>') +
+        '<br><a class="guide-link" href="#/metrics/' + c.key + '" target="_self">What a 5 looks like →</a></div></div>';
+    }).join('');
+
+    return '<article class="call-card reveal" id="call-' + i + '" data-group="' + groupOf(call) + '">' +
+      '<header class="cc-head">' +
+        '<div class="ring ring-sm">' + ringSvg(call.score, pass, 'sm') + '<div class="ring-label"><b>' + fmt2(call.score) + '</b></div></div>' +
+        '<div class="cc-title"><p class="eyebrow">' + esc(labels[i]) + ' · ' + esc(fmtDate(call.date)) + (i === calls.length - 1 ? ' · Latest' : '') + '</p>' +
+          '<h3>' + (call.conductedBy ? 'Scored by ' + esc(call.conductedBy) : esc(labels[i])) + '</h3>' +
+          (meta ? '<p class="cc-meta">' + meta + '</p>' : '') + '</div>' +
+        (call.verdict ? '<span class="verdict ' + (good ? 'ok' : 'warn') + '">' + (good ? '✓ Good to go' : '↻ Need to improve') + '</span>' : '') +
+      '</header>' +
+      '<div class="cc-body">' +
+        '<div class="cc-summary">' + summaryHtml +
+          (pass ? '<p class="pass-line">Pass mark for ' + ROLE_NAME[call.role] + ': <b>' + pass + '</b></p>' : '') +
+          (call.remarks ? '<div class="quote"><p>' + esc(call.remarks) + '</p><p class="by">Final remarks from ' + esc(call.conductedBy || 'your trainer') + '</p></div>' : '') + '</div>' +
+        '<div class="cc-sw">' + (ai && (ai.strengths.length || ai.focus.length)
+          ? '<div><h4><span class="panel-icon hi">↑</span>Strengths</h4><div class="sw-list">' + (ai.strengths.length ? aiMini(ai.strengths, 'hi', 'note') : '<p class="empty-note">No criterion reached 4 on this call.</p>') + '</div></div>' +
+            '<div><h4><span class="panel-icon lo">→</span>Areas to work on</h4><div class="sw-list">' + (ai.focus.length ? aiMini(ai.focus, 'lo', 'fix') : '<p class="empty-note">Nothing to fix here.</p>') + '</div></div>'
+          : '<div><h4><span class="panel-icon hi">↑</span>Strengths</h4><div class="sw-list">' + (sum.strengths.length ? mini(sum.strengths, 'hi') : '<p class="empty-note">No criterion reached 4 on this call.</p>') + '</div></div>' +
+            '<div><h4><span class="panel-icon lo">→</span>' + (sum.polish ? 'To polish' : 'Areas to work on') + '</h4><div class="sw-list">' + (sum.areas.length ? mini(sum.areas, 'lo') : '<p class="empty-note">A perfect 5 on every criterion.</p>') + '</div></div>') +
+        '</div>' +
+      '</div>' +
+      '<details class="cc-details"' + (open ? ' open' : '') + '><summary>Feedback by criterion <span class="muted">(' + crits.length + ')</span></summary><div class="breakdown">' + rows + '</div></details>' +
+    '</article>';
+  }
+
+  function renderMine() {
+    var calls = state.calls, body = $('#mine-body');
+    var first = state.user.firstName || '';
+    if (!calls.length) {
+      body.innerHTML = '<div class="card empty reveal"><p class="eyebrow">02 · My score</p><h2>No scorecards yet</h2>' +
+        '<p>We couldn’t find a mock call scored under <b>' + esc(state.user.email) + '</b>. Scorecards show up here the moment your trainer submits them. ' +
+        'If you took a mock call before the portal launched, or think one is missing, message the training team on Slack.</p>' +
+        '<a class="btn btn-ghost" href="#/metrics" target="_self">See how you’ll be scored →</a></div>';
+      return;
+    }
+    var labels = callLabels(calls);
+    var counts = { all: calls.length };
+    calls.forEach(function (c) { var g = groupOf(c); counts[g] = (counts[g] || 0) + 1; });
+    var groups = ['all', 'r1', 'r2', 'extra', 'earlier'].filter(function (g) { return counts[g]; });
+    if (groups.indexOf(state.round) === -1) state.round = 'all';
+    var filter = groups.length > 2
+      ? '<div class="seg" role="group" aria-label="Filter by round">' + groups.map(function (g) {
+          return '<button type="button" data-round="' + g + '" aria-pressed="' + (g === state.round) + '">' + esc(GROUPS[g]) + ' <span class="cnt">' + counts[g] + '</span></button>';
+        }).join('') + '</div>'
+      : '';
+    var order = calls.map(function (c, i) { return i; }).reverse(); // newest first
+    var cards = order.filter(function (i) { return state.round === 'all' || groupOf(calls[i]) === state.round; })
+      .map(function (i, k) { return callCardHtml(calls[i], i, calls, labels, k === 0); }).join('');
+
+    body.innerHTML =
+      '<div class="mine-head"><div><p class="eyebrow">02 · My score</p><h1>' + (first ? esc(first) + ', here’s your feedback' : 'Your feedback') + '</h1></div>' +
+      '<p class="muted">' + calls.length + ' mock call' + (calls.length === 1 ? '' : 's') + ' on record</p></div>' +
+      topCardHtml(calls, labels) +
+      '<div class="calls-head"><div><h2>Each call</h2><p class="muted">Newest at the top, your first call at the bottom.</p></div>' + filter + '</div>' +
+      '<div class="call-feed">' + cards + '</div>';
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        $$('.ring .val', body).forEach(function (v) { v.style.strokeDashoffset = v.getAttribute('data-target'); });
+      });
+    });
+    $$('[data-round]', body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.round = b.getAttribute('data-round');
+        var y = $('.calls-head', body).getBoundingClientRect().top + window.scrollY - 12;
+        renderMine();
+        window.scrollTo(0, y);
+      });
+    });
+    $$('.trend .hit', body).forEach(function (h) {
+      var k = Number(h.getAttribute('data-i')), c = calls[k];
+      h.addEventListener('mousemove', function (e) {
+        showTip('<b>' + esc(labels[k]) + '</b> · ' + esc(fmtDate(c.date)) + '<br>' + fmt2(c.score) + ' / 5 · ' + (isGood(c) ? 'Good to go' : 'Need to improve'), e.clientX, e.clientY);
+      });
+      h.addEventListener('mouseleave', hideTip);
+      h.addEventListener('click', function () { hideTip(); jumpToCall(k); });
+    });
+    fillTakes(labels);
+  }
+
+  // Older calls get HAWKEYE's take the first time they're opened: one at a time, newest first.
+  var takeBusy = false;
+  function fillTakes(labels) {
+    if (takeBusy || !state.user.coach) return;
+    var el = $('#mine-body [data-take]');
+    if (!el) return;
+    var id = Number(el.getAttribute('data-take'));
+    takeBusy = true;
+    coachApi('summary', { token: state.token, id: id }).then(function (res) {
+      var i = -1;
+      state.calls.forEach(function (c, k) { if (c.id === id) i = k; });
+      if (i === -1) return;
+      state.calls[i].ai = res.ai || null;
+      var card = $('#call-' + i);
+      if (!card) return;
+      var open = $('.cc-details', card) && $('.cc-details', card).open;
+      if (!res.ai) { var t = $('[data-take]', card); if (t) t.remove(); return; }
+      var tmp = document.createElement('div');
+      tmp.innerHTML = callCardHtml(state.calls[i], i, state.calls, labels, open);
+      var fresh = tmp.firstChild;
+      fresh.classList.remove('reveal');
+      card.parentNode.replaceChild(fresh, card);
+      var v = $('.ring .val', fresh);
+      if (v) v.style.strokeDashoffset = v.getAttribute('data-target');
+    }).catch(function () {
+      var t = $('#mine-body [data-take="' + id + '"]');
+      if (t) t.remove();
+    }).then(function () {
+      takeBusy = false;
+      if (!$('#view-mine').hidden) fillTakes(labels);
+    });
+  }
+
+  function jumpToCall(k) {
+    if (state.round !== 'all' && groupOf(state.calls[k]) !== state.round) { state.round = 'all'; renderMine(); }
+    var card = $('#call-' + k);
+    if (!card) return;
+    var d = $('.cc-details', card);
+    if (d) d.open = true;
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    card.classList.remove('flash');
+    void card.offsetWidth;
+    card.classList.add('flash');
+  }
+
+  function loadMine() {
+    $('#mine-body').innerHTML = '<div class="loader"><span class="mono muted">Finding your scorecards…</span></div>';
+    show('view-mine');
+    api('apiMockMyCalls', state.token).then(function (res) {
+      state.calls = res.calls || [];
+      state.pass = res.pass || state.user.form.pass;
+      renderMine();
+    }).catch(function (err) {
+      if (handleSession(err)) return;
+      $('#mine-body').innerHTML = '<div class="card empty"><h2>Something went wrong</h2><p>' + esc(err.message) + '</p><a class="btn btn-ghost" href="#/" target="_self">Home</a></div>';
+    });
+  }
+
+  /* ================= Metrics ================= */
+  var VLABEL = { all: 'All verticals', 'SWE': 'SWE', 'PM': 'PM', Data: 'Data' };
+  var RLABEL = { all: 'All roles', presales: 'Pre-sales · Qualifier', sales: 'Sales · Advisor' };
+  var RSHORT = { presales: 'Pre-sales', sales: 'Sales' };
+  function critOrder() {
+    var out = [];
+    GUIDE.phases.forEach(function (p) { p.items.forEach(function (k) { out.push(k); }); });
+    return out;
+  }
+  // Call schedule is only scored on pre-sales calls; Data doesn't offer placement.
+  function critShown(k, v, r) { return !(k === 'schedule' && r === 'sales') && !(k === 'placement' && v === 'Data'); }
+  function avgFor(key, v, r) { return GUIDE.criteria[key].avg[v][r || 'all']; }
+  function callsFor(v, r) { return GUIDE.snapshot.counts[v][r || 'all']; }
+
+  function buildMetrics() {
+    var order = critOrder();
+    var num = function (k) { return String(order.indexOf(k) + 1).padStart(2, '0'); };
+    var phases = GUIDE.phases.map(function (p) {
+      return '<div class="phase"><div class="phase-name">' + esc(p.label) + '</div><div class="phase-sub">' + esc(p.sub) + '</div><div class="phase-chips">' +
+        p.items.map(function (k) { return '<button class="chip-btn" type="button" data-pick="' + k + '"><span class="n">' + num(k) + '</span>' + esc(GUIDE.criteria[k].name) + '</button>'; }).join('') +
+        '</div></div>';
+    }).join('');
+    var seg = ['all'].concat(GUIDE.verticals).map(function (v) {
+      return '<button type="button" data-vert="' + v + '">' + esc(VLABEL[v]) + '</button>';
+    }).join('');
+    var rseg = ['all', 'presales', 'sales'].map(function (r) {
+      return '<button type="button" data-role="' + r + '">' + esc(RLABEL[r]) + '</button>';
+    }).join('');
+    var nav = order.map(function (k) {
+      return '<button class="cn-item" type="button" role="tab" data-pick="' + k + '"><span class="n">' + num(k) + '</span><span>' + esc(GUIDE.criteria[k].name) + '</span><span class="avg" data-avg="' + k + '"></span></button>';
+    }).join('');
+    var scale = GUIDE.scale.map(function (s) {
+      return '<div class="scale-item"><b>' + s.n + '</b><div class="lbl">' + esc(s.label) + '</div><p>' + esc(s.text) + '</p></div>';
+    }).join('');
+
+    $('#metrics-body').innerHTML =
+      '<header class="page-head"><p class="eyebrow">03 · Evaluation metrics</p><h1>How mock calls are scored</h1>' +
+      '<p class="lede">Twelve criteria, in the order a good call flows. Pick one to see what it checks, what a 5 looks like, and where people lose marks. The guidance comes from trainers’ written feedback; the averages update live from every scored call.</p></header>' +
+      '<div class="facts">' +
+        '<div class="fact"><span class="eyebrow">Each criterion</span><b>1 – 5</b><span>Missing, weak, average, good, excellent</span></div>' +
+        '<div class="fact"><span class="eyebrow">Final score</span><b>Average</b><span>Of every criterion that applies to the call</span></div>' +
+        '<div class="fact"><span class="eyebrow">Pass mark</span><b>3.5 · 4.0</b><span>Pre-sales (Qualifier) · Sales (Advisor)</span></div>' +
+        '<div class="fact"><span class="eyebrow">Verdict</span><b>Go / Improve</b><span>Need to improve means another mock call</span></div>' +
+      '</div>' +
+      '<div class="sec-title"><h2>The call, in four phases</h2><p>Pick a criterion to open it below.</p></div>' +
+      '<div class="flow">' + phases + '</div>' +
+      '<div class="filter-row" id="explorer-top"><div class="filters">' +
+        '<div class="seg" role="group" aria-label="Vertical">' + seg + '</div>' +
+        '<div class="seg seg-sm" role="group" aria-label="Role">' + rseg + '</div>' +
+      '</div><span class="note" id="vert-note"></span></div>' +
+      '<div class="explorer"><div class="crit-nav" role="tablist" aria-label="Criteria">' + nav + '</div><div class="detail" id="crit-detail" role="tabpanel"></div></div>' +
+      '<div class="sec-title"><h2>Where marks are lost</h2><p id="chart-sub"></p></div>' +
+      '<div class="chart" id="chart"></div>' +
+      '<div class="sec-title"><h2>The rating scale</h2><p>What each number means on the scorecard.</p></div>' +
+      '<div class="scale">' + scale + '</div>';
+
+    $$('#metrics-body [data-pick]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        pickCrit(b.getAttribute('data-pick'));
+        if (b.classList.contains('chip-btn')) $('#explorer-top').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+    $$('#metrics-body [data-vert]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.vertical = b.getAttribute('data-vert');
+        store('mcp-vertical', state.vertical);
+        paintMetrics();
+      });
+    });
+    $$('#metrics-body [data-role]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.role = b.getAttribute('data-role');
+        store('mcp-role', state.role);
+        paintMetrics();
+      });
+    });
+    state.metricsBuilt = true;
+  }
+
+  function pickCrit(key) {
+    if (!GUIDE.criteria[key]) key = 'intro';
+    state.crit = key;
+    try { history.replaceState(null, '', '#/metrics/' + key); } catch (e) { /* file:// preview */ }
+    paintMetrics();
+  }
+
+  function paintMetrics() {
+    var v = state.vertical, r = state.role, order = critOrder();
+    var shown = order.filter(function (k) { return critShown(k, v, r); });
+    if (shown.indexOf(state.crit) === -1) state.crit = shown[0];
+    var key = state.crit, g = GUIDE.criteria[key];
+    var num = function (k) { return String(shown.indexOf(k) + 1).padStart(2, '0'); };
+    $$('#metrics-body [data-vert]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-vert') === v)); });
+    $$('#metrics-body [data-role]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-role') === r)); });
+    // Hide criteria that don't apply to this vertical/role, and renumber the rest.
+    $$('#metrics-body [data-pick]').forEach(function (b) {
+      var k = b.getAttribute('data-pick'), on = shown.indexOf(k) !== -1;
+      b.hidden = !on;
+      if (on) $('.n', b).textContent = num(k);
+      b.setAttribute(b.classList.contains('cn-item') ? 'aria-selected' : 'aria-pressed', String(k === key));
+    });
+    // On narrow screens the list scrolls sideways: keep the chosen criterion in view.
+    var nav = $('#metrics-body .crit-nav'), cur = $('#metrics-body .cn-item[aria-selected="true"]');
+    if (nav && cur && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = cur.offsetLeft - nav.offsetLeft - 8;
+    $$('#metrics-body [data-avg]').forEach(function (el) { var a = avgFor(el.getAttribute('data-avg'), v, r); el.textContent = a == null ? 'n/a' : a.toFixed(1); });
+    var n = callsFor(v, r);
+    var who = (v === 'all' ? '' : v + ' ') + (r === 'all' ? '' : RSHORT[r].toLowerCase() + ' ');
+    $('#vert-note').innerHTML = esc('Averages from ' + n + ' scored ' + who + 'calls, ' + GUIDE.snapshot.from + '–' + GUIDE.snapshot.to) +
+      (n < 10 ? '<br><b>Small sample:</b> treat these averages as rough.' : '') +
+      (r === 'sales' ? '<br>Call schedule isn’t scored on sales calls.' : '') +
+      (v === 'Data' ? '<br>Placement isn’t scored for Data: we don’t offer it.' : '');
+
+    var phase = GUIDE.phases.filter(function (p) { return p.items.indexOf(key) !== -1; })[0];
+    var items = g.good.filter(function (it) { return (!it.v || v === 'all' || it.v === v) && (!it.r || r === 'all' || it.r === r); });
+    var vm = /^(SWE|PM|Data): /;
+    var misses = g.misses.filter(function (m) { var hit = m.match(vm); return !hit || v === 'all' || hit[1] === v; });
+    var a = avgFor(key, v, r);
+
+    var vbars = GUIDE.verticals.filter(function (vv) { return critShown(key, vv, r); }).map(function (vv) {
+      var x = avgFor(key, vv, r);
+      return '<div class="vbar' + (v !== 'all' && v !== vv ? ' is-dim' : '') + '"><span>' + esc(vv) + '</span><span class="track">' +
+        (x == null ? '' : '<span class="fill" style="width:' + (x / 5 * 100).toFixed(1) + '%"></span>') + '</span><span class="v">' + (x == null ? '<span class="muted">n/a</span>' : x.toFixed(2)) + '</span></div>';
+    }).join('');
+    var tag = function (it) {
+      var t = '';
+      if (it.v && v === 'all') t += '<span class="vt">' + esc(it.v) + '</span>';
+      if (it.r && r === 'all') t += '<span class="vt rt">' + esc(RSHORT[it.r]) + '</span>';
+      return t;
+    };
+
+    $('#crit-detail').innerHTML =
+      '<div class="detail-top"><div><p class="eyebrow">' + num(key) + ' · ' + esc(phase.label) + (g.presales ? ' · Pre-sales only' : '') + '</p>' +
+        '<h2>' + esc(g.name) + '</h2><p class="what">' + esc(g.what) + '</p></div>' +
+        '<div class="avg-box"><b>' + (a == null ? '–' : a.toFixed(2)) + '</b><span>' + (a == null ? 'Not enough calls yet' : 'average score<br>' + esc(VLABEL[v]) + ' · ' + esc(RLABEL[r])) + '</span></div></div>' +
+      '<div class="detail-cols">' +
+        '<div><h4>What a 5 looks like</h4><ul class="checks">' + items.map(function (it) {
+          return '<li><span>' + esc(it.t) + tag(it) + '</span></li>';
+        }).join('') + '</ul></div>' +
+        '<div><h4>Where people lose marks</h4><ul class="misses">' + misses.map(function (m) { return '<li><span>' + esc(m) + '</span></li>'; }).join('') + '</ul>' +
+        '<div class="vbars"><h4>Average by vertical' + (r === 'all' ? '' : ' · ' + esc(RSHORT[r])) + '</h4>' + vbars + '</div></div>' +
+      '</div>' +
+      '<div class="say"><h4>Try saying</h4><p>“' + esc(g.say) + '”</p></div>';
+
+    // Chart: average per criterion for the chosen vertical and role, in call order.
+    var rows = shown.map(function (k) { return { k: k, name: GUIDE.criteria[k].name, a: avgFor(k, v, r) }; });
+    var lows = rows.filter(function (x) { return x.a != null; }).sort(function (x, y) { return x.a - y.a; }).slice(0, 2).map(function (x) { return x.k; });
+    $('#chart-sub').textContent = 'Average score per criterion · ' + VLABEL[v] + ' · ' + RLABEL[r] + ' · scale 1–5';
+    $('#chart').innerHTML = rows.map(function (x) {
+      var w = x.a == null ? 0 : (x.a - 1) / 4 * 100;
+      return '<div class="hbar' + (lows.indexOf(x.k) !== -1 ? ' is-low' : '') + '" data-k="' + x.k + '" tabindex="0">' +
+        '<span class="lbl">' + esc(x.name) + (lows.indexOf(x.k) !== -1 ? '<span class="flag">Lowest</span>' : '') + '</span>' +
+        '<span class="track">' + (x.a == null ? '' : '<span class="fill" style="width:' + w.toFixed(1) + '%"></span>') + '</span>' +
+        '<span class="v">' + (x.a == null ? '<span class="muted">n/a</span>' : x.a.toFixed(2)) + '</span></div>';
+    }).join('') +
+      '<div class="chart-axis"><span></span><span class="ticks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></span><span></span></div>' +
+      '<p class="chart-foot">Bars start at 1, the lowest possible rating. Click a bar to open that criterion.</p>';
+    $$('#chart .hbar').forEach(function (el) {
+      var x = rows.filter(function (y) { return y.k === el.getAttribute('data-k'); })[0];
+      el.addEventListener('mousemove', function (e) {
+        showTip('<b>' + esc(x.name) + '</b><br>' + (x.a == null ? 'Not enough calls yet' : x.a.toFixed(2) + ' / 5 average · ' + esc(VLABEL[v]) + ' · ' + esc(RLABEL[r])), e.clientX, e.clientY);
+      });
+      el.addEventListener('mouseleave', hideTip);
+      el.addEventListener('click', function () { hideTip(); pickCrit(x.k); $('#explorer-top').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      el.addEventListener('keydown', function (e) { if (e.key === 'Enter') el.click(); });
+    });
+  }
+
+  function showMetrics(key) {
+    if (!state.metricsBuilt) buildMetrics();
+    var wasHidden = $('#view-metrics').hidden;
+    if (wasHidden) show('view-metrics');
+    state.crit = GUIDE.criteria[key] ? key : state.crit;
+    paintMetrics();
+    loadStats();   // swaps in the live averages when they arrive
+    if (key && wasHidden) setTimeout(function () { $('#explorer-top').scrollIntoView({ block: 'start' }); }, 30);
+  }
+
+  /* ================= Ask HAWKEYE (AI coach) ================= */
+  var COACH_KEY = 'mcp-coach';
+  state.coach = [];
+  try { state.coach = JSON.parse(sessionStorage.getItem(COACH_KEY) || '[]'); } catch (e) { state.coach = []; }
+
+  // Escaped text with **bold**, "- " bullets and paragraphs.
+  function richText(t) {
+    var html = '', list = false;
+    esc(t).split('\n').forEach(function (line) {
+      var l = line.trim().replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+      if (/^[-•*]\s+/.test(l)) {
+        if (!list) { html += '<ul>'; list = true; }
+        html += '<li>' + l.replace(/^[-•*]\s+/, '') + '</li>';
+        return;
+      }
+      if (list) { html += '</ul>'; list = false; }
+      if (l) html += '<p>' + l + '</p>';
+    });
+    if (list) html += '</ul>';
+    return html;
+  }
+
+  function coachChips() {
+    var calls = state.calls || [];
+    var latest = calls[calls.length - 1];
+    var low = latest ? latest.criteria.filter(function (c) { return typeof c.score === 'number'; }).sort(function (a, b) { return a.score - b.score; })[0] : null;
+    var chips = calls.length
+      ? ['What should I fix first before my next call?', low ? 'Give me three lines to practise for ' + low.label + '.' : null,
+        calls.length > 1 ? 'How have I improved across my calls?' : 'What did I do well on this call?', 'Make me a 20-minute practice plan.']
+      : ['How will my mock call be scored?', 'What does a 5 on Fit check sound like?', 'Make me a practice plan for my first mock call.'];
+    return chips.filter(Boolean);
+  }
+
+  function renderCoach() {
+    var log = $('#coach-log');
+    var first = state.user && state.user.firstName ? state.user.firstName : '';
+    log.innerHTML = '<div class="msg bot"><p>Hi' + (first ? ' ' + esc(first) : '') + '! I’ve read every scorecard on your record. Ask me what to fix, how you’re trending, or for lines to practise.</p></div>' +
+      state.coach.map(function (m) { return '<div class="msg ' + (m.role === 'user' ? 'me' : 'bot') + '">' + (m.role === 'user' ? '<p>' + esc(m.content) + '</p>' : richText(m.content)) + '</div>'; }).join('');
+    $('#coach-chips').innerHTML = state.coach.length ? '' : coachChips().map(function (c) { return '<button type="button" class="chip-btn" data-ask="' + esc(c) + '">' + esc(c) + '</button>'; }).join('');
+    $$('#coach-chips [data-ask]').forEach(function (b) { b.addEventListener('click', function () { askCoach(b.getAttribute('data-ask')); }); });
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function openCoach() {
+    $('#coach-overlay').hidden = false;
+    document.body.classList.add('no-scroll');
+    renderCoach();
+    setTimeout(function () { $('#coach-q').focus(); }, 50);
+  }
+  function closeCoach() {
+    $('#coach-overlay').hidden = true;
+    document.body.classList.remove('no-scroll');
+  }
+
+  function askCoach(q) {
+    q = String(q || '').trim();
+    if (!q || $('#coach-send').disabled) return;
+    state.coach.push({ role: 'user', content: q });
+    $('#coach-q').value = '';
+    renderCoach();
+    $('#coach-log').insertAdjacentHTML('beforeend', '<div class="msg bot is-typing" id="coach-typing"><span></span><span></span><span></span></div>');
+    $('#coach-log').scrollTop = $('#coach-log').scrollHeight;
+    busy($('#coach-send'), true);
+    coachApi('coach', { token: state.token, messages: state.coach.slice(-12) }).then(function (res) {
+      state.coach.push({ role: 'assistant', content: res.reply });
+      $('#coach-left').textContent = res.left != null ? res.left + ' questions left today.' : '';
+    }).catch(function (err) {
+      if (handleSession(err)) return;
+      state.coach.pop();
+      toast(err.message);
+      $('#coach-q').value = q;
+    }).then(function () {
+      try { sessionStorage.setItem(COACH_KEY, JSON.stringify(state.coach.slice(-24))); } catch (e) { /* private mode */ }
+      busy($('#coach-send'), false);
+      renderCoach();
+    });
+  }
+
+  $('#coach-fab').addEventListener('click', openCoach);
+  $$('[data-close-coach]').forEach(function (b) { b.addEventListener('click', closeCoach); });
+  $('#coach-overlay').addEventListener('click', function (e) { if (e.target === this) closeCoach(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#coach-overlay').hidden) closeCoach(); });
+  $('#coach-form').addEventListener('submit', function (e) { e.preventDefault(); askCoach($('#coach-q').value); });
+  $('#coach-q').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askCoach(this.value); }
+  });
+
+  /* ================= Settings (admins) ================= */
+  var MAIL_KEYS = ['r1', 'r2', 'extra'];
+  var CC_NAMES = { scorer: 'Scorer', manager: 'Their manager', head: 'Vertical head', training: 'Training team' };
+  var PLACEHOLDERS = '{first} {name} {round} {score} {verdict} {scorer} {vertical} {role} {passMark}';
+
+  function getPath(o, path) { return path.split('.').reduce(function (x, k) { return x == null ? x : x[k]; }, o); }
+  function setPath(o, path, v) {
+    var ks = path.split('.'), last = ks.pop();
+    ks.reduce(function (x, k) { return x[k] = x[k] || {}; }, o)[last] = v;
+  }
+
+  function loadSettings() {
+    $('#settings-body').innerHTML = '<div class="loader"><span class="mono muted">Loading settings…</span></div>';
+    show('view-settings');
+    api('apiMockAdmin', state.token).then(function (d) {
+      state.admin = d;
+      state.draft = JSON.parse(JSON.stringify(d.cfg));
+      state.dirty = false;
+      renderSettings();
+    }).catch(function (err) {
+      if (handleSession(err)) return;
+      $('#settings-body').innerHTML = '<div class="card empty"><h2>Settings are for admins</h2><p>' + esc(err.message) + '</p><a class="btn btn-ghost" href="#/" target="_self">Home</a></div>';
+    });
+  }
+
+  function sw(path, label) {
+    var on = !!getPath(state.draft, path), ro = !state.admin.canEdit;
+    return '<label class="switch"><input type="checkbox" data-path="' + path + '"' + (on ? ' checked' : '') + (ro ? ' disabled' : '') + '><span class="sw-track"><i></i></span>' + (label ? '<span class="sw-label">' + esc(label) + '</span>' : '') + '</label>';
+  }
+  function txt(path, label, opts) {
+    opts = opts || {};
+    var v = getPath(state.draft, path) || '', ro = !state.admin.canEdit ? ' disabled' : '';
+    var tag = opts.area ? '<textarea class="input" rows="' + (opts.rows || 4) + '" data-path="' + path + '"' + ro + '>' + esc(v) + '</textarea>'
+      : '<input class="input" ' + (opts.type ? 'type="' + opts.type + '" ' : '') + 'data-path="' + path + '" value="' + esc(v) + '"' + (opts.ph ? ' placeholder="' + esc(opts.ph) + '"' : '') + ro + '>';
+    return '<label class="set-field"><span class="field-label">' + esc(label) + '</span>' + (opts.help ? '<span class="help">' + esc(opts.help) + '</span>' : '') + tag + '</label>';
+  }
+
+  function renderSettings() {
+    var d = state.admin, c = state.draft, ro = !d.canEdit;
+    var mailCards = MAIL_KEYS.map(function (k) {
+      var t = c.types[k];
+      var chips = Object.keys(CC_NAMES).map(function (cc) {
+        return '<label class="pill"><input type="checkbox" data-path="types.' + k + '.cc.' + cc + '"' + (t.cc[cc] ? ' checked' : '') + (ro ? ' disabled' : '') + '><span>' + CC_NAMES[cc] + '</span></label>';
+      }).join('');
+      return '<div class="mail-card' + (t.on ? '' : ' is-off') + '">' +
+        '<div class="mail-top"><div><h3>' + esc(d.typeNames[k]) + '</h3><p class="muted">To the trainee, the moment ' + { r1: 'a Round 1', r2: 'a Round 2', extra: 'an additional attempt' }[k] + ' scorecard is submitted.</p></div>' + sw('types.' + k + '.on') + '</div>' +
+        '<div class="mail-cc"><span class="field-label">Copy</span><div class="pills">' + chips + '</div></div>' +
+        '<details class="mail-words"><summary>Edit the wording</summary>' +
+          txt('types.' + k + '.subject', 'Subject') + txt('types.' + k + '.intro', 'Opening message', { area: true, rows: 5 }) +
+          '<p class="help">Placeholders: ' + PLACEHOLDERS + '. The score, HAWKEYE’s take, strengths, areas to work on and the feedback for every criterion are added below it.</p></details>' +
+        '<div class="mail-actions"><button class="btn btn-ghost btn-sm" type="button" data-preview="' + k + '">Preview</button><button class="link-btn" type="button" data-test="' + k + '">Send me a test</button></div>' +
+      '</div>';
+    }).join('');
+
+    var people = (d.people || []).slice().sort(function (a, b) { return a.tier - b.tier || a.name.localeCompare(b.name); });
+    var access = d.canEdit
+      ? '<section class="set-sec"><div class="set-head"><div><h2>Who can manage HAWKEYE</h2><p class="muted">Admins can open these settings (view only) and ORIGIN’s Manager dashboard. Super-admins can change them. This list is shared with ORIGIN.</p></div></div>' +
+        '<div class="panel"><div class="people">' + people.map(function (p) {
+          var tierName = p.tier === 1 ? 'Super-admin' : p.tier === 2 ? 'Admin' : 'Removed';
+          return '<div class="person"><span class="avatar">' + esc((p.name || p.email).charAt(0).toUpperCase()) + '</span><span class="p-who"><b>' + esc(p.name || p.email) + '</b><small>' + esc(p.email) + '</small></span>' +
+            '<span class="tier t' + p.tier + '">' + tierName + '</span>' +
+            (p.fixed ? '<span class="muted p-act">Fixed</span>' : p.tier === 2 ? '<button class="link-btn p-act" type="button" data-acc="setTier" data-email="' + esc(p.email) + '">Remove admin</button>'
+              : '<button class="link-btn p-act" type="button" data-acc="restore" data-email="' + esc(p.email) + '">Restore</button>') + '</div>';
+        }).join('') + '</div>' +
+        '<form class="add-admin" id="add-admin"><input class="input" name="email" type="email" placeholder="name@kestrel.example" required><input class="input" name="name" placeholder="Full name (optional)"><button class="btn btn-primary btn-sm" type="submit">Make admin</button></form></div></section>'
+      : '';
+
+    var log = (d.log || []).map(function (l) {
+      return '<div class="log-row"><span class="log-kind">' + esc(l.kind) + '</span><span class="log-sub"><b>' + esc(l.subject) + '</b><small>To ' + esc(l.to) + (l.cc && l.cc.length ? ' · copied ' + esc(l.cc.join(', ')) : '') + '</small></span>' +
+        '<span class="log-at ' + (l.ok ? '' : 'bad') + '">' + (l.ok ? esc(fmtDate(l.at)) : 'Failed: ' + esc(l.err || '')) + '</span></div>';
+    }).join('');
+
+    $('#settings-body').innerHTML =
+      '<header class="page-head"><p class="eyebrow">Admin</p><h1>HAWKEYE settings</h1>' +
+      '<p class="lede">Who gets each scorecard email and what it says, the weekly digest, the AI coach, and who can manage HAWKEYE.' + (ro ? ' <b>You can view these; only the super-admins can change them.</b>' : '') + '</p></header>' +
+      '<section class="set-sec"><div class="set-head"><div><h2>Scorecard emails</h2><p class="muted">The trainee gets the same view they see under “I want to see my score”, with HAWKEYE’s take on top.</p></div>' + sw('emails', 'Send scorecard emails') + '</div>' +
+        '<div class="mail-grid">' + mailCards + '</div></section>' +
+      '<section class="set-sec"><div class="set-head"><div><h2>Who gets copied</h2><p class="muted">Only @kestrel.example addresses. Separate them with commas. The scorer and the trainee’s manager come from each scorecard.</p></div></div>' +
+        '<div class="panel set-grid">' + txt('training', 'Training team') + txt('heads.SWE', 'Vertical head · SWE') + txt('heads.PM', 'Vertical head · PM') + txt('heads.Data', 'Vertical head · Data') + '</div></section>' +
+      '<section class="set-sec"><div class="set-head"><div><h2>Weekly digest</h2><p class="muted">Monday morning: calls scored, who cleared, who’s waiting on another call, and who scored. Goes to the training team, every vertical head and anyone added here.' +
+        (d.digestSent ? ' Last sent ' + esc(d.digestSent) + '.' : '') + '</p></div>' + sw('digest.on', 'Send every Monday') + '</div>' +
+        '<div class="panel">' + txt('digest.extra', 'Also send it to', { ph: 'head.of.sales@kestrel.example' }) +
+        '<div class="mail-actions"><button class="btn btn-ghost btn-sm" type="button" data-preview="digest">Preview this week’s</button><button class="link-btn" type="button" data-test="digest">Send me a test</button></div></div></section>' +
+      '<section class="set-sec"><div class="set-head"><div><h2>AI coach</h2><p class="muted">' + 'Runs on Cloudflare Workers AI (Llama 3.3 70B) inside HAWKEYE, with no API key. It writes a take on each call the first time the trainee opens it and answers trainees’ questions about their own scorecards. Switch it off here and trainees get the standard summaries.' + '</p></div>' + sw('ai', 'Coach on') + '</div>' +
+        '<div class="panel set-grid">' + txt('chatPerDay', 'Questions per trainee per day', { type: 'number' }) + '</div></section>' +
+      access +
+      (log ? '<section class="set-sec"><div class="set-head"><h2>Recently sent</h2></div><div class="panel">' + log + '</div></section>' : '') +
+      (d.canEdit ? '<div class="save-bar" id="save-bar" hidden><span>You have unsaved changes.</span><button class="btn btn-ghost btn-sm" type="button" id="set-undo">Undo</button><button class="btn btn-primary btn-sm" type="button" id="set-save">Save changes</button></div>' : '');
+
+    var body = $('#settings-body');
+    $$('[data-path]', body).forEach(function (el) {
+      var ev = el.type === 'checkbox' ? 'change' : 'input';
+      el.addEventListener(ev, function () {
+        var v = el.type === 'checkbox' ? el.checked : el.value;
+        setPath(state.draft, el.getAttribute('data-path'), v);
+        state.dirty = true;
+        $('#save-bar') && ($('#save-bar').hidden = false);
+        if (/^types\.\w+\.on$/.test(el.getAttribute('data-path'))) el.closest('.mail-card').classList.toggle('is-off', !el.checked);
+      });
+    });
+    $$('[data-preview]', body).forEach(function (b) { b.addEventListener('click', function () { previewMail(b.getAttribute('data-preview'), b); }); });
+    $$('[data-test]', body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        busy(b, true);
+        api('apiMockEmailTest', state.token, b.getAttribute('data-test'), state.draft).then(function (r) { toast('Test sent to ' + r.sentTo + '.'); })
+          .catch(function (err) { toast(err.message); }).then(function () { busy(b, false); });
+      });
+    });
+    var save = $('#set-save');
+    if (save) save.addEventListener('click', function () {
+      busy(save, true);
+      api('apiMockAdminSet', state.token, { type: 'cfg', cfg: state.draft }).then(function (d2) {
+        state.admin = d2; state.draft = JSON.parse(JSON.stringify(d2.cfg)); state.dirty = false;
+        state.user.coach = !!(d2.aiKey && d2.cfg.ai);
+        renderSettings();
+        toast('Settings saved.');
+      }).catch(function (err) { toast(err.message); busy(save, false); });
+    });
+    var undo = $('#set-undo');
+    if (undo) undo.addEventListener('click', function () { state.draft = JSON.parse(JSON.stringify(state.admin.cfg)); state.dirty = false; renderSettings(); });
+    $$('[data-acc]', body).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var type = b.getAttribute('data-acc'), email = b.getAttribute('data-email');
+        if (type === 'setTier' && !confirm('Remove ' + email + ' as an admin? They keep normal access to HAWKEYE and ORIGIN.')) return;
+        accessOp({ type: type, email: email, tier: 3 }, b);
+      });
+    });
+    var add = $('#add-admin');
+    if (add) add.addEventListener('submit', function (e) {
+      e.preventDefault();
+      accessOp({ type: 'add', email: add.email.value.trim(), name: add.name.value.trim(), tier: 2 }, $('button', add));
+    });
+  }
+
+  function accessOp(op, btn) {
+    busy(btn, true);
+    api('apiMockAdminSet', state.token, { type: 'access', op: op }).then(function (d) {
+      state.admin.people = d.people;
+      renderSettings();
+      toast('Access updated.');
+    }).catch(function (err) { toast(err.message); busy(btn, false); });
+  }
+
+  function previewMail(kind, btn) {
+    busy(btn, true);
+    api('apiMockEmailPreview', state.token, kind, state.draft).then(function (m) {
+      var ov = document.createElement('div');
+      ov.className = 'overlay overlay-center';
+      ov.innerHTML = '<div class="modal mail-modal" role="dialog" aria-modal="true"><header class="drawer-head"><div><p class="eyebrow">Preview</p><h2>' + esc(m.subject) + '</h2>' +
+        '<p class="muted mail-to">To ' + esc(Array.isArray(m.to) ? m.to.join(', ') : m.to) + (m.cc && m.cc.length ? ' · copied ' + esc(m.cc.join(', ')) : '') + '</p></div>' +
+        '<button class="icon-btn" type="button" aria-label="Close">✕</button></header><iframe class="mail-frame" title="Email preview"></iframe></div>';
+      document.body.appendChild(ov);
+      $('iframe', ov).srcdoc = m.html;
+      var close = function () { ov.remove(); };
+      $('.icon-btn', ov).addEventListener('click', close);
+      ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    }).catch(function (err) { toast(err.message); }).then(function () { busy(btn, false); });
+  }
+
+  window.addEventListener('beforeunload', function (e) { if (state.dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  /* ================= Router ================= */
+  function route() {
+    hideTip();
+    var parts = location.hash.replace(/^#\/?/, '').split('/');
+    var page = parts[0] || 'home';
+    if (!state.token || !state.user) { state.nextArg = parts[1] || ''; return showLanding(page === 'scored' ? 'home' : page); }
+    if (page === 'metrics') return showMetrics(parts[1]);
+    if (page === 'score') { renderScoreForm(); return show('view-score'); }
+    if (page === 'mine') return loadMine();
+    if (page === 'settings') return loadSettings();
+    if (page === 'scored' && $('#done-lead').innerHTML) return show('view-scored');
+    show('view-home');
+  }
+  window.addEventListener('hashchange', function () {
+    if (state.dirty && !$('#view-settings').hidden && !confirm('Leave without saving your settings?')) return;
+    state.dirty = false;
+    route();
+  });
+
+  /* ================= Boot ================= */
+  var v0 = store('mcp-vertical');
+  if (v0 && (v0 === 'all' || GUIDE.verticals.indexOf(v0) !== -1)) state.vertical = v0;
+  var r0 = store('mcp-role');
+  if (r0 === 'all' || r0 === 'presales' || r0 === 'sales') state.role = r0;
+  state.token = store(TOKEN_KEY);
+  if (state.token) {
+    show('view-loading');
+    api('apiMockSession', state.token).then(function (u) { setUser(u); route(); loadStats(); })
+      .catch(function (err) {
+        state.token = null;
+        store(TOKEN_KEY, null);
+        setUser(null);
+        if (err.code !== 'SESSION') toast(err.message);
+        route();
+      });
+  } else {
+    setUser(null);
+    route();
+  }
+})();
+</script>
+
+
+<style>
+.demo-skip{margin-top:18px;padding:14px 14px 12px;border-radius:14px;border:1px dashed rgba(255,255,255,.28);background:rgba(255,255,255,.05)}
+.demo-skip p{margin:0 0 10px;font-size:13px;opacity:.85}
+.demo-skip .row{display:flex;gap:8px;flex-wrap:wrap}
+.demo-skip button{flex:1 1 120px;cursor:pointer;font:inherit;font-size:14px;font-weight:600;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:inherit}
+.demo-skip button:hover{background:rgba(255,255,255,.2)}
+.demo-skip small{display:block;margin-top:8px;font-size:12px;opacity:.65}
+.demo-pill{position:fixed;left:14px;bottom:14px;z-index:9999;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100vw - 90px);padding:7px 8px 7px 12px;border-radius:999px;font:500 12px/1.2 system-ui,sans-serif;background:rgba(20,16,40,.88);color:#fff;box-shadow:0 6px 24px rgba(0,0,0,.25);backdrop-filter:blur(6px)}
+.demo-pill b{letter-spacing:.08em;font-size:11px;color:#FFD580}
+.demo-pill button{cursor:pointer;font:inherit;padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff}
+.demo-pill button:hover{background:rgba(255,255,255,.15)}
+</style>
+<script>
+(function () {
+  var ROLES = [{"id":"trainee","label":"Trainee","role":"trainee","token":"demo:maya.fernandes@kestrel.example","hash":"#/mine"},{"id":"admin","label":"Admin","role":"admin","token":"demo:jordan.lee@kestrel.example","hash":""}], TOKEN = "mcp-token";
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function enter(id) {
+    var r = ROLES.filter(function (x) { return x.id === id; })[0];
+    set('origin-page', null); // each role opens on its own start page
+    set('demo-role', r.role); set(TOKEN, r.token); location.hash = r.hash || ''; location.reload();
+  }
+  function reset() { try { Object.keys(localStorage).forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {} location.hash = ''; location.reload(); }
+  function box() {
+    var host = document.querySelector('#signin [data-step="email"]') || document.querySelector('#signin');
+    if (!host || host.querySelector('.demo-skip')) return;
+    var d = document.createElement('div'); d.className = 'demo-skip';
+    d.innerHTML = '<p><b>Demo.</b> No real sign-in, no real data. Skip straight in as:</p><div class="row">' +
+      ROLES.map(function (r) { return '<button type="button" data-demo="' + r.id + '">' + r.label + '</button>'; }).join('') +
+      '</div><small>Or type any name@kestrel.example email and any 6-digit code.</small>';
+    host.appendChild(d);
+    d.addEventListener('click', function (e) { var b = e.target.closest('[data-demo]'); if (b) enter(b.getAttribute('data-demo')); });
+  }
+  function pill() {
+    if (!get(TOKEN) || document.querySelector('.demo-pill')) return;
+    var cur = ROLES.filter(function (r) { return r.token === get(TOKEN); })[0] || ROLES[0];
+    var other = ROLES.filter(function (r) { return r !== cur; })[0];
+    var p = document.createElement('div'); p.className = 'demo-pill';
+    p.innerHTML = '<b>DEMO</b><span>HAWKEYE · ' + cur.label + ' view</span>' + (other ? '<button type="button" data-sw>Switch to ' + other.label.toLowerCase() + '</button>' : '') + '<button type="button" data-reset>Start over</button>';
+    document.body.appendChild(p);
+    p.addEventListener('click', function (e) { if (e.target.closest('[data-sw]')) enter(other.id); if (e.target.closest('[data-reset]')) reset(); });
+  }
+  function run() { box(); pill(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+  setInterval(run, 1500);
+})();
+</script>
+</body>
+</html>
